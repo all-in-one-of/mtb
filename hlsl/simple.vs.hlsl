@@ -1,4 +1,6 @@
-float4 main( float4 pos : POSITION ) : SV_POSITION
-{
-	return pos;
+#include "shader.hlsl"
+
+void main(sVSSimple vin, out sPSSimple vout) {
+	vout.cpos = vin.pos;
+	vout.clr = vin.clr;
 }

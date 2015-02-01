@@ -76,6 +76,7 @@ cShaderStorage& get_shader_storage() { return globals.shaderStorage.get(); }
 class cObj {
 	struct sVtx {
 		float mPos[3];
+		float mClr[4];
 	};
 
 	cShader* mpVS = nullptr;
@@ -93,6 +94,9 @@ public:
 			state_init();
 			mState++;
 			break;
+		case 2:
+			state_deinit();
+			break;
 		}
 	}
 	void disp() {
@@ -109,6 +113,11 @@ public:
 		//pCtx->Draw(3, 0);
 		pCtx->DrawIndexed(3, 0, 0);
 	}
+
+	void deinit() {
+		mState = 2;
+		exec();
+	}
 private:
 	void state_init() {
 		auto& ss = get_shader_storage();
@@ -116,7 +125,8 @@ private:
 		mpPS = ss.load_PS("simple.ps.cso");
 
 		D3D11_INPUT_ELEMENT_DESC vdsc[] = {
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sVtx, mPos), D3D11_INPUT_PER_VERTEX_DATA, 0 }
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sVtx, mPos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(sVtx, mClr), D3D11_INPUT_PER_VERTEX_DATA, 0 }
 		};
 		auto pDev = get_gfx().get_dev();
 		auto& code = mpVS->get_code();
@@ -124,9 +134,9 @@ private:
 		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
 
 		sVtx vtx[3] = {
-			{ 0.0f, 0.5f, 0.5f },
-			{ 0.5f, -0.5f, 0.5f },
-			{ -0.5f, -0.5f, 0.5f }
+			{ 0.0f, 0.5f, 0.5f,     1.0, 0.0f, 0.0f, 1.0f },
+			{ 0.5f, -0.5f, 0.5f,    0.0, 1.0f, 0.0f, 1.0f },
+			{ -0.5f, -0.5f, 0.5f,   0.0, 0.0f, 1.0f, 1.0f }
 		};
 		uint16_t idx[3] = { 0, 1, 2 };
 
@@ -152,6 +162,12 @@ private:
 		initData.SysMemSlicePitch = 0;
 		hr = pDev->CreateBuffer(&desc, &initData, &mpIdxBuf);
 		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBuffer idx failed");
+	}
+
+	void state_deinit() {
+		if (mpIdxBuf) mpIdxBuf->Release();
+		if (mpVtxBuf) mpVtxBuf->Release();
+		if (mpIL) mpIL->Release();
 	}
 };
 
@@ -181,6 +197,8 @@ void loop() {
 
 		if (!quit) {
 			do_frame();
+		} else {
+			obj.deinit();
 		}
 	}
 }

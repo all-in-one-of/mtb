@@ -1,4 +1,9 @@
-float4 main() : SV_TARGET
+#include "shader.hlsl"
+
+float4 main(sPSSimple pin) : SV_TARGET
 {
-	return float4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	float4 clr = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	clr = pin.clr;
+	return clr;
 }
