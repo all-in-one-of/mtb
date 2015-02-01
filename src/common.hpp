@@ -2,6 +2,11 @@
 #include <algorithm>
 #include <type_traits>
 
+template <std::size_t N> struct type_of_size_helper { typedef char type[N]; };
+template <typename T, std::size_t Size> typename type_of_size_helper<Size>::type& sizeof_for_static_arrays_helper(T(&)[Size]);
+#define SIZEOF_ARRAY(pArray) sizeof(sizeof_for_static_arrays_helper(pArray))
+
+
 struct noncopyable {
 	noncopyable() = default;
 
@@ -15,6 +20,8 @@ public:
 
 	cstr() : p(nullptr) {}
 	cstr(char const* p) : p(p) {}
+
+	operator char const* () const { return p; }
 };
 
 template <typename T>
@@ -46,25 +53,25 @@ public:
 		GlobalSingleton<T>& obj;
 		sScope(GlobalSingleton<T>& obj) : obj(obj) { }
 		~sScope() {
-			obj.Dtor();
+			obj.dtor();
 		}
 	};
 
 	template <typename ... Args>
-	void Ctor(Args&&... args) {
+	void ctor(Args&&... args) {
 		::new(&mData) T(std::forward<Args>(args)...);
 	}
 	template <typename ... Args>
-	sScope CtorScoped(Args&&... args) {
+	sScope ctor_scoped(Args&&... args) {
 		::new(&mData) T(std::forward<Args>(args)...);
 		return sScope(*this);
 	}
-	void Dtor() {
-		T& t = Get();
+	void dtor() {
+		T& t = get();
 		t.~T();
 	}
-	T& Get() { return *reinterpret_cast<T*>(&mData); }
-	T const& Get() const { return *reinterpret_cast<T const*>(&mData); }
+	T& get() { return *reinterpret_cast<T*>(&mData); }
+	T const& get() const { return *reinterpret_cast<T const*>(&mData); }
 
 	operator T const& () const { return Get(); }
 };
