@@ -82,6 +82,7 @@ class cObj {
 	cShader* mpPS = nullptr;
 	ID3D11InputLayout* mpIL = nullptr;
 	ID3D11Buffer* mpVtxBuf = nullptr;
+	ID3D11Buffer* mpIdxBuf = nullptr;
 
 	int mState = 0;
 public:
@@ -99,12 +100,14 @@ public:
 
 		UINT pStride[] = { sizeof(sVtx) };
 		UINT pOffset[] = { 0 };
+		pCtx->IASetIndexBuffer(mpIdxBuf, DXGI_FORMAT_R16_UINT, 0);
 		pCtx->IASetVertexBuffers(0, 1, &mpVtxBuf, pStride, pOffset);
 		pCtx->IASetInputLayout(mpIL);
 		pCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		pCtx->VSSetShader(mpVS->asVS(), nullptr, 0);
 		pCtx->PSSetShader(mpPS->asPS(), nullptr, 0);
-		pCtx->Draw(3, 0);
+		//pCtx->Draw(3, 0);
+		pCtx->DrawIndexed(3, 0, 0);
 	}
 private:
 	void state_init() {
@@ -125,6 +128,7 @@ private:
 			{ 0.5f, -0.5f, 0.5f },
 			{ -0.5f, -0.5f, 0.5f }
 		};
+		uint16_t idx[3] = { 0, 1, 2 };
 
 		auto desc = D3D11_BUFFER_DESC();
 		desc.Usage = D3D11_USAGE_DEFAULT;
@@ -137,7 +141,17 @@ private:
 		initData.SysMemPitch = 0;
 		initData.SysMemSlicePitch = 0;
 		hr = pDev->CreateBuffer(&desc, &initData, &mpVtxBuf);
-		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
+		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBuffer vtx failed");
+
+		desc = D3D11_BUFFER_DESC();
+		desc.Usage = D3D11_USAGE_DEFAULT;
+		desc.ByteWidth = SIZEOF_ARRAY(idx) * sizeof(uint16_t);
+		desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		initData.pSysMem = idx;
+		initData.SysMemPitch = 0;
+		initData.SysMemSlicePitch = 0;
+		hr = pDev->CreateBuffer(&desc, &initData, &mpIdxBuf);
+		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBuffer idx failed");
 	}
 };
 
