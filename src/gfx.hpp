@@ -84,8 +84,38 @@ class cGfx : noncopyable {
 		}
 	};
 
+	struct sRSState : noncopyable {
+		moveable_ptr<ID3D11RasterizerState> mpRSState;
+
+		sRSState() {}
+		sRSState(sDev& dev) {
+			auto desc = D3D11_RASTERIZER_DESC();
+			desc.FillMode = D3D11_FILL_SOLID;
+			desc.CullMode = D3D11_CULL_NONE;
+			desc.FrontCounterClockwise = FALSE;
+			desc.DepthClipEnable = TRUE;
+			desc.ScissorEnable = FALSE;
+			desc.MultisampleEnable = FALSE;
+			desc.AntialiasedLineEnable = FALSE;
+
+			HRESULT hr = dev.mpDev->CreateRasterizerState(&desc, mpRSState.pp());
+			if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateRasterizerState");
+
+			dev.mpImmCtx->RSSetState(mpRSState);
+		}
+		~sRSState() {
+			if (mpRSState) mpRSState->Release();
+		}
+		sRSState(sRSState&& o) : mpRSState(std::move(o.mpRSState)) {}
+		sRSState& operator=(sRSState&& o) {
+			mpRSState = std::move(o.mpRSState);
+			return *this;
+		}
+	};
+
 	sDev mDev;
 	sRTView mRTV;
+	sRSState mRSState;
 
 public:
 	cGfx(HWND hwnd);

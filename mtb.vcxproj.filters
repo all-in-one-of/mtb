@@ -15,9 +15,7 @@
     <ClInclude Include="src\gfx.hpp">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="hlsl\shader.h">
-      <Filter>hlsl</Filter>
-    </ClInclude>
+    <ClInclude Include="src\math.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -32,6 +30,9 @@
       <Filter>hlsl</Filter>
     </FxCompile>
     <FxCompile Include="hlsl\simple.ps.hlsl">
+      <Filter>hlsl</Filter>
+    </FxCompile>
+    <FxCompile Include="hlsl\shader.hlsl">
       <Filter>hlsl</Filter>
     </FxCompile>
   </ItemGroup>

@@ -42,6 +42,8 @@ cGfx::cGfx(HWND hwnd) {
 	vp.MaxDepth = 1.0f;
 
 	mDev.mpImmCtx->RSSetViewports(1, &vp);
+
+	mRSState = sRSState(mDev);
 }
 
 void cGfx::begin_frame() {
