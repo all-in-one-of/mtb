@@ -18,6 +18,9 @@
     <ClInclude Include="src\math.hpp">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\model.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="src\rdr.hpp">
       <Filter>src</Filter>
     </ClInclude>
@@ -27,6 +30,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\gfx.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\model.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\rdr.cpp">

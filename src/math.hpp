@@ -9,3 +9,8 @@ inline constexpr float DEG2RAD(float deg) {
 inline constexpr float RAD2DEG(float rad) {
 	return rad * 180.f / DirectX::XM_PI;
 }
+
+
+struct vec3 {
+	DirectX::XMFLOAT3 mVal;
+};

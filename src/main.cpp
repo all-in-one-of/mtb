@@ -4,12 +4,15 @@
 
 #include "common.hpp"
 #include "gfx.hpp"
-
 #include "math.hpp"
 #include "rdr.hpp"
+#include "model.hpp"
+
+
 namespace dx = DirectX;
 using dx::XMFLOAT4;
 
+#include <assimp\Importer.hpp>
 
 class cSDLInit {
 public:
@@ -97,9 +100,9 @@ public:
 
 public:
 	void init() {
-		mPos = dx::XMVectorSet(1.0f, 2.0f, 3.0f, 1.0f);
-		//mPos = dx::XMVectorSet(0.0f, 0.0f, 3.0f, 1.0f);
-		mTgt = dx::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+		//mPos = dx::XMVectorSet(1.0f, 2.0f, 3.0f, 1.0f);
+		mPos = dx::XMVectorSet(0.3f, 0.3f, 1.0f, 1.0f);
+		mTgt = dx::XMVectorSet(0.3f, 0.3f, 0.0f, 1.0f);
 		mUp = dx::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
 
@@ -281,9 +284,7 @@ public:
 		UINT pStride[] = { sizeof(sVtx) };
 		UINT pOffset[] = { 0 };
 		mIdxBuf.set(pCtx, 0);
-		//pCtx->IASetIndexBuffer(mpIdxBuf, DXGI_FORMAT_R16_UINT, 0);
 		mVtxBuf.set(pCtx, 0, 0);
-		//pCtx->IASetVertexBuffers(0, 1, &mpVtxBuf, pStride, pOffset);
 		pCtx->IASetInputLayout(mpIL);
 		pCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		pCtx->VSSetShader(mpVS->asVS(), nullptr, 0);
@@ -342,19 +343,22 @@ void do_frame() {
 	auto& gfx = get_gfx();
 	gfx.begin_frame();
 
-	dx::XMMATRIX m = dx::XMMatrixRotationY(camRot);
-	dx::XMVECTOR cp = cam.mPos;
+	//dx::XMMATRIX m = dx::XMMatrixRotationY(camRot);
+	//dx::XMVECTOR cp = cam.mPos;
 	//dx::XMVECTOR cp = dx::XMVectorSet(0, 0, 3, 1);
-	cam.mPos = dx::XMVector4Transform(cp, m);
-	cam.recalc();
+	//cam.mPos = dx::XMVector4Transform(cp, m);
+	//cam.recalc();
 
 	camCBuf.mData.viewProj = cam.mView.mViewProj;
 	camCBuf.mData.view = cam.mView.mView;
 	camCBuf.mData.proj = cam.mView.mProj;
 	camCBuf.update(gfx.get_ctx());
+	camCBuf.set_VS(gfx.get_ctx(), 1);
 
-	obj.exec();
-	obj.disp();
+	//obj.exec();
+	//obj.disp();
+
+	model.disp();
 
 	gnomon.exec();
 	gnomon.disp();
@@ -391,6 +395,12 @@ int main(int argc, char* argv[]) {
 
 	camCBuf.init(get_gfx().get_dev());
 	cam.init();
+
+
+	cModelData mdlData;
+	mdlData.load("../data/jill.obj");
+
+	model.init(mdlData);
 
 	loop();
 

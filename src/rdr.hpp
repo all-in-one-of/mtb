@@ -75,7 +75,7 @@ public:
 
 	void init(ID3D11Device* pDev, void const* pVtxData, uint32_t vtxCount, uint32_t vtxSize);
 
-	void set(ID3D11DeviceContext* pCtx, uint32_t slot, uint32_t offset);
+	void set(ID3D11DeviceContext* pCtx, uint32_t slot, uint32_t offset) const;
 };
 
 class cIndexBuffer : public cBufferBase {
@@ -90,5 +90,5 @@ public:
 	}
 
 	void init(ID3D11Device* pDev, void const* pIdxData, uint32_t idxCount, DXGI_FORMAT format);
-	void set(ID3D11DeviceContext* pCtx, uint32_t offset);
+	void set(ID3D11DeviceContext* pCtx, uint32_t offset) const;
 };

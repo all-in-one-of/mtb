@@ -45,7 +45,7 @@ void cVertexBuffer::init(ID3D11Device* pDev, void const* pVtxData, uint32_t vtxC
 	mVtxSize = vtxSize;
 }
 
-void cVertexBuffer::set(ID3D11DeviceContext* pCtx, uint32_t slot, uint32_t offset) {
+void cVertexBuffer::set(ID3D11DeviceContext* pCtx, uint32_t slot, uint32_t offset) const {
 	pCtx->IASetVertexBuffers(slot, 1, &mpBuf.p, &mVtxSize, &offset);
 }
 
@@ -60,6 +60,6 @@ void cIndexBuffer::init(ID3D11Device* pDev, void const* pIdxData, uint32_t idxCo
 	mFormat = format;
 }
 
-void cIndexBuffer::set(ID3D11DeviceContext* pCtx, uint32_t offset) {
+void cIndexBuffer::set(ID3D11DeviceContext* pCtx, uint32_t offset) const {
 	pCtx->IASetIndexBuffer(mpBuf, mFormat, offset);
 }
