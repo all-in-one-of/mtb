@@ -6,6 +6,7 @@
 #include "gfx.hpp"
 
 #include "math.hpp"
+#include "rdr.hpp"
 namespace dx = DirectX;
 using dx::XMFLOAT4;
 
@@ -132,68 +133,6 @@ cGfx& get_gfx() { return globals.gfx.get(); }
 cShaderStorage& get_shader_storage() { return globals.shaderStorage.get(); }
 
 
-class cConstBufferBase : noncopyable {
-	moveable_ptr<ID3D11Buffer> mpBuf;
-public:
-	cConstBufferBase() = default;
-	~cConstBufferBase() { deinit(); }
-	cConstBufferBase(cConstBufferBase&& o) : mpBuf(std::move(o.mpBuf)) {}
-	cConstBufferBase& operator=(cConstBufferBase&& o) {
-		mpBuf = std::move(o.mpBuf);
-		return *this;
-	}
-
-	void deinit() {
-		if (mpBuf) {
-			mpBuf->Release();
-			mpBuf = nullptr;
-		}
-	}
-
-	void set_VS(ID3D11DeviceContext* pCtx, UINT slot) {
-		ID3D11Buffer* bufs[1] = { mpBuf };
-		pCtx->VSSetConstantBuffers(slot, 1, bufs);
-	}
-
-	void set_PS(ID3D11DeviceContext* pCtx, UINT slot) {
-		ID3D11Buffer* bufs[1] = { mpBuf };
-		pCtx->PSSetConstantBuffers(slot, 1, bufs);
-	}
-protected:
-	void init(ID3D11Device* pDev, size_t size) {
-		auto desc = D3D11_BUFFER_DESC();
-		desc.Usage = D3D11_USAGE_DYNAMIC;
-		desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		desc.ByteWidth = (UINT)size;
-
-		HRESULT hr = pDev->CreateBuffer(&desc, nullptr, mpBuf.pp());
-		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBuffer const buffer failed");
-	}
-
-	void update(ID3D11DeviceContext* pCtx, void const* pData, size_t size) {
-		D3D11_MAPPED_SUBRESOURCE mr;
-		HRESULT hr = pCtx->Map(mpBuf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mr);
-		if (SUCCEEDED(hr)) {
-			::memcpy(mr.pData, pData, size);
-			pCtx->Unmap(mpBuf, 0);
-		}
-	}
-};
-
-template <typename T>
-class cConstBuffer : public cConstBufferBase {
-public:
-	T mData;
-	
-	void init(ID3D11Device* pDev) {
-		cConstBufferBase::init(pDev, sizeof(T));
-	}
-	
-	void update(ID3D11DeviceContext* pCtx) {
-		cConstBufferBase::update(pCtx, &mData, sizeof(T));
-	}
-};
 
 
 struct sTestCBuf {
@@ -223,7 +162,7 @@ class cGnomon {
 	cShader* mpVS = nullptr;
 	cShader* mpPS = nullptr;
 	ID3D11InputLayout* mpIL = nullptr;
-	ID3D11Buffer* mpVtxBuf = nullptr;
+	cVertexBuffer mVtxBuf;
 	cConstBuffer<sMeshCBuf> mConstBuf;
 	int mState = 0;
 public:
@@ -251,7 +190,7 @@ public:
 
 		UINT pStride[] = { sizeof(sVtx) };
 		UINT pOffset[] = { 0 };
-		pCtx->IASetVertexBuffers(0, 1, &mpVtxBuf, pStride, pOffset);
+		mVtxBuf.set(pCtx, 0, 0);
 		pCtx->IASetInputLayout(mpIL);
 		pCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 		pCtx->VSSetShader(mpVS->asVS(), nullptr, 0);
@@ -287,24 +226,12 @@ private:
 			{ 0.0f, 0.0f, 1.0f, 0.0, 0.0f, 1.0f, 1.0f },
 		};
 
-		auto desc = D3D11_BUFFER_DESC();
-		desc.Usage = D3D11_USAGE_DEFAULT;
-		desc.ByteWidth = SIZEOF_ARRAY(vtx) * sizeof(vtx[0]);
-		desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		desc.CPUAccessFlags = 0;
-		desc.MiscFlags = 0;
-		D3D11_SUBRESOURCE_DATA initData;
-		initData.pSysMem = vtx;
-		initData.SysMemPitch = 0;
-		initData.SysMemSlicePitch = 0;
-		hr = pDev->CreateBuffer(&desc, &initData, &mpVtxBuf);
-		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBuffer vtx failed");
-
+		mVtxBuf.init(pDev, vtx, SIZEOF_ARRAY(vtx), sizeof(vtx[0]));
 		mConstBuf.init(pDev);
 	}
 
 	void state_deinit() {
-		if (mpVtxBuf) mpVtxBuf->Release();
+		mVtxBuf.deinit();
 		if (mpIL) mpIL->Release();
 	}
 };
@@ -324,8 +251,8 @@ class cObj {
 	cShader* mpVS = nullptr;
 	cShader* mpPS = nullptr;
 	ID3D11InputLayout* mpIL = nullptr;
-	ID3D11Buffer* mpVtxBuf = nullptr;
-	ID3D11Buffer* mpIdxBuf = nullptr;
+	cVertexBuffer mVtxBuf;
+	cIndexBuffer mIdxBuf;
 	cConstBuffer<sMeshCBuf> mConstBuf;
 	int mState = 0;
 public:
@@ -353,8 +280,10 @@ public:
 
 		UINT pStride[] = { sizeof(sVtx) };
 		UINT pOffset[] = { 0 };
-		pCtx->IASetIndexBuffer(mpIdxBuf, DXGI_FORMAT_R16_UINT, 0);
-		pCtx->IASetVertexBuffers(0, 1, &mpVtxBuf, pStride, pOffset);
+		mIdxBuf.set(pCtx, 0);
+		//pCtx->IASetIndexBuffer(mpIdxBuf, DXGI_FORMAT_R16_UINT, 0);
+		mVtxBuf.set(pCtx, 0, 0);
+		//pCtx->IASetVertexBuffers(0, 1, &mpVtxBuf, pStride, pOffset);
 		pCtx->IASetInputLayout(mpIL);
 		pCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		pCtx->VSSetShader(mpVS->asVS(), nullptr, 0);
@@ -389,41 +318,23 @@ private:
 		};
 		uint16_t idx[3] = { 0, 1, 2 };
 
-		auto desc = D3D11_BUFFER_DESC();
-		desc.Usage = D3D11_USAGE_DEFAULT;
-		desc.ByteWidth = SIZEOF_ARRAY(vtx) * sizeof(vtx[0]);
-		desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		desc.CPUAccessFlags = 0;
-		desc.MiscFlags = 0;
-		D3D11_SUBRESOURCE_DATA initData;
-		initData.pSysMem = vtx;
-		initData.SysMemPitch = 0;
-		initData.SysMemSlicePitch = 0;
-		hr = pDev->CreateBuffer(&desc, &initData, &mpVtxBuf);
-		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBuffer vtx failed");
-
-		desc = D3D11_BUFFER_DESC();
-		desc.Usage = D3D11_USAGE_DEFAULT;
-		desc.ByteWidth = SIZEOF_ARRAY(idx) * sizeof(uint16_t);
-		desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		initData.pSysMem = idx;
-		initData.SysMemPitch = 0;
-		initData.SysMemSlicePitch = 0;
-		hr = pDev->CreateBuffer(&desc, &initData, &mpIdxBuf);
-		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBuffer idx failed");
-
+		mVtxBuf.init(pDev, vtx, SIZEOF_ARRAY(vtx), sizeof(vtx[0]));
+		mIdxBuf.init(pDev, idx, SIZEOF_ARRAY(idx), DXGI_FORMAT_R16_UINT);
 		mConstBuf.init(pDev);
 	}
 
 	void state_deinit() {
-		if (mpIdxBuf) mpIdxBuf->Release();
-		if (mpVtxBuf) mpVtxBuf->Release();
+		mVtxBuf.deinit();
+		mIdxBuf.deinit();
 		if (mpIL) mpIL->Release();
 	}
 };
 
 cObj obj;
 cGnomon gnomon;
+cModel model;
+
+
 
 float camRot = DEG2RAD(0.01f);
 

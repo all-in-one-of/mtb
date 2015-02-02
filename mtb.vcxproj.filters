@@ -15,13 +15,21 @@
     <ClInclude Include="src\gfx.hpp">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\math.hpp" />
+    <ClInclude Include="src\math.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rdr.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\gfx.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rdr.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

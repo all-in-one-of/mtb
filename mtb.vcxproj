@@ -176,9 +176,11 @@
   <ItemGroup>
     <ClCompile Include="src\gfx.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\rdr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\math.hpp" />
+    <ClInclude Include="src\rdr.hpp" />
     <FxCompile Include="hlsl\shader.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

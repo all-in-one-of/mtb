@@ -4,11 +4,6 @@
 
 class cSDLWindow;
 
-struct sD3DException : public std::exception {
-	HRESULT hr;
-	sD3DException(HRESULT hr, char const* const msg) : std::exception(msg), hr(hr) {}
-};
-
 class cGfx : noncopyable {
 	
 
