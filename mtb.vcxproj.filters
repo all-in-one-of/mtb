@@ -61,8 +61,10 @@
     <FxCompile Include="hlsl\simple.ps.hlsl">
       <Filter>hlsl</Filter>
     </FxCompile>
-    <FxCompile Include="hlsl\shader.hlsl">
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="hlsl\shader.hlsli">
       <Filter>hlsl</Filter>
-    </FxCompile>
+    </None>
   </ItemGroup>
 </Project>

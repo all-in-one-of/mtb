@@ -1,4 +1,4 @@
-#include "shader.hlsl"
+#include "shader.hlsli"
 
 float4 main(sPSSimple pin) : SV_TARGET
 {

@@ -1,4 +1,4 @@
-#include "shader.hlsl"
+#include "shader.hlsli"
 
 cbuffer Mesh : register(b0) {
 	float4x4 g_world;
