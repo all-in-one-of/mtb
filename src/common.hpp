@@ -99,7 +99,10 @@ public:
 
 
 struct sD3DException : public std::exception {
-	uint64_t hr;
-	sD3DException(uint64_t hr, char const* const msg) : std::exception(msg), hr(hr) {}
+	long hr;
+	sD3DException(long hr, char const* const msg) : std::exception(msg), hr(hr) {}
 };
 
+
+void dbg_msg(cstr format);
+void dbg_msg(cstr format, ...);
