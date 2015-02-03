@@ -175,12 +175,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\camera.cpp" />
+    <ClCompile Include="src\common.cpp" />
     <ClCompile Include="src\gfx.cpp" />
+    <ClCompile Include="src\input.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\model.cpp" />
     <ClCompile Include="src\rdr.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\camera.hpp" />
+    <ClInclude Include="src\input.hpp" />
     <ClInclude Include="src\math.hpp" />
     <ClInclude Include="src\model.hpp" />
     <ClInclude Include="src\rdr.hpp" />

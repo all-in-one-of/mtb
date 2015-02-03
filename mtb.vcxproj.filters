@@ -24,6 +24,12 @@
     <ClInclude Include="src\rdr.hpp">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\input.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\camera.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -36,6 +42,15 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\rdr.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\input.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\camera.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

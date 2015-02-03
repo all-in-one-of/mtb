@@ -9,7 +9,8 @@
 #include "gfx.hpp"
 #include "rdr.hpp"
 #include "model.hpp"
-
+#include "input.hpp"
+#include "camera.hpp"
 
 namespace dx = DirectX;
 using dx::XMFLOAT4;
@@ -72,76 +73,21 @@ private:
 	}
 };
 
-class cCamera {
-public:
-	struct sView {
-		dx::XMMATRIX mView;
-		dx::XMMATRIX mProj;
-		dx::XMMATRIX mViewProj;
-
-		void calc_view(dx::XMVECTOR const& pos, dx::XMVECTOR const& tgt, dx::XMVECTOR const& up) {
-			mView = dx::XMMatrixLookAtRH(pos, tgt, up);
-		}
-
-		void calc_proj(float fovY, float aspect, float nearZ, float farZ) {
-			mProj = dx::XMMatrixPerspectiveFovRH(fovY, aspect, nearZ, farZ);
-		}
-
-		void calc_viewProj() {
-			mViewProj = mView * mProj;
-		}
-	};
-
-	dx::XMVECTOR mPos;
-	dx::XMVECTOR mTgt;
-	dx::XMVECTOR mUp;
-
-	sView mView;
-
-	float mFovY;
-	float mAspect;
-	float mNearZ;
-	float mFarZ;
-
-public:
-	void init() {
-		//mPos = dx::XMVectorSet(1.0f, 2.0f, 3.0f, 1.0f);
-		mPos = dx::XMVectorSet(0.3f, 0.3f, 1.0f, 1.0f);
-		mTgt = dx::XMVectorSet(0.3f, 0.3f, 0.0f, 1.0f);
-		mUp = dx::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
-
-
-		mFovY = DEG2RAD(45.0f);
-		//mFovY = dx::XM_PIDIV2;
-		mAspect = 640.0f / 480.0f;
-		mNearZ = 0.001f;
-		mFarZ = 1000.0f;
-
-		recalc();
-	}
-
-	void recalc() {
-		mView.calc_view(mPos, mTgt, mUp);
-		mView.calc_proj(mFovY, mAspect, mNearZ, mFarZ);
-		mView.calc_viewProj();
-	}
-};
-
-
 
 struct sGlobals {
 	GlobalSingleton<cSDLWindow> win;
 	GlobalSingleton<cGfx> gfx;
 	GlobalSingleton<cShaderStorage> shaderStorage;
+	GlobalSingleton<cInputMgr> input;
+	GlobalSingleton<cCamera> camera;
 };
 
 sGlobals globals;
 
 cGfx& get_gfx() { return globals.gfx.get(); }
 cShaderStorage& get_shader_storage() { return globals.shaderStorage.get(); }
-
-
-
+cInputMgr& get_input_mgr() { return globals.input.get(); }
+cCamera& get_camera() { return globals.camera.get(); }
 vec2i get_window_size() { return globals.win.get().get_window_size(); }
 
 struct sTestCBuf {
@@ -155,7 +101,7 @@ struct sCameraCBuf {
 };
 
 cConstBuffer<sCameraCBuf> camCBuf;
-cCamera cam;
+
 
 
 class cGnomon {
@@ -341,7 +287,102 @@ cObj obj;
 cGnomon gnomon;
 cModel model;
 
+class cTrackballCam {
+	cTrackball tb;
+public:
+	void init() {
+	}
 
+	void update() {
+		bool updated = false;
+		updated = updated || update_trackball();
+		updated = updated || update_distance();
+		updated = updated || update_translation();
+		if (updated) {
+			auto& cam = get_camera();
+			cam.recalc();
+		}
+	}
+protected:
+	bool update_trackball() {
+		auto& input = get_input_mgr();
+		const auto btn = cInputMgr::EMBMIDDLE;
+		if (!input.mbtn_state(btn)) return false;
+		auto pos = input.mMousePos;
+		//auto prev = input.mMousePosStart[btn];
+		auto prev = input.mMousePosPrev;
+		if (pos == prev) return false;
+
+		tb.update(pos, prev);
+		auto& cam = get_camera();
+		tb.apply(cam);
+		return true;
+	}
+
+	bool update_distance() {
+		auto& input = get_input_mgr();
+		const auto btn = cInputMgr::EMBRIGHT;
+		if (!input.mbtn_holded(btn)) return false;
+
+		auto pos = input.mMousePos;
+		auto prev = input.mMousePosPrev;
+
+		int dy = pos.y - prev.y;
+		if (dy == 0) return false;
+		float scale;
+		float speed = 0.08f;
+		if (dy < 0) {
+			scale = 1.0f - ::log10f((float)clamp(-dy, 1, 10)) * speed;
+		} else {
+			scale = 1.0f + ::log10f((float)clamp(dy, 1, 10)) * speed;
+		}
+
+		auto& cam = get_camera();
+		auto dir = dx::XMVectorSubtract(cam.mPos, cam.mTgt);
+		dir = dx::XMVectorScale(dir, scale);
+		cam.mPos = dx::XMVectorAdd(dir, cam.mTgt);
+
+		return true;
+	}
+
+	bool update_translation() {
+		auto& input = get_input_mgr();
+		//const auto btn = cInputMgr::EMBMIDDLE;
+		const auto btn = cInputMgr::EMBLEFT;
+		if (!input.mbtn_holded(btn)) return false;
+
+		auto pos = input.mMousePos;
+		auto prev = input.mMousePosPrev;
+
+		auto dt = pos - prev;
+		if (dt == vec2i(0, 0)) return false;
+
+		vec2f dtf = dt;
+		dtf = dtf * 0.001f;
+
+		auto& cam = get_camera();
+		auto cpos = cam.mPos;
+		auto ctgt = cam.mTgt;
+		auto cup = cam.mUp;
+		auto cdir = dx::XMVectorSubtract(cpos, ctgt);
+		auto side = dx::XMVector3Cross(cdir, cup); // reverse direction
+
+		float len = dx::XMVectorGetX(dx::XMVector3LengthEst(cdir));
+
+		auto move = dx::XMVectorSet(dtf.x, dtf.y * len, 0, 0);
+		//move = dx::XMVectorScale(move, len);
+
+		dx::XMMATRIX b(side, cup, cdir, dx::g_XMZero);
+		move = dx::XMVector3Transform(move, b);
+
+		cam.mPos = dx::XMVectorAdd(cpos, move);
+		cam.mTgt = dx::XMVectorAdd(ctgt, move);
+
+		return true;
+	}
+};
+
+cTrackballCam trackballCam;
 
 float camRot = DEG2RAD(0.01f);
 
@@ -354,7 +395,8 @@ void do_frame() {
 	//dx::XMVECTOR cp = dx::XMVectorSet(0, 0, 3, 1);
 	//cam.mPos = dx::XMVector4Transform(cp, m);
 	//cam.recalc();
-
+	auto& cam = get_camera();
+	trackballCam.update();
 	camCBuf.mData.viewProj = cam.mView.mViewProj;
 	camCBuf.mData.view = cam.mView.mView;
 	camCBuf.mData.proj = cam.mView.mProj;
@@ -375,11 +417,21 @@ void do_frame() {
 void loop() {
 	bool quit = false;
 	SDL_Event ev;
+	auto& inputMgr = get_input_mgr();
 	while (!quit) {
+		inputMgr.update();
+
 		while (SDL_PollEvent(&ev)) {
 			switch (ev.type) {
 			case SDL_QUIT:
 				quit = true;
+				break;
+			case SDL_MOUSEMOTION:
+				inputMgr.on_mouse_motion(ev.motion);
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+				inputMgr.on_mouse_button(ev.button);
 				break;
 			}
 		}
@@ -393,15 +445,18 @@ void loop() {
 	}
 }
 
+
 int main(int argc, char* argv[]) {
 	cSDLInit sdl;
 	auto win = globals.win.ctor_scoped("TestBed", 1200, 900, 0);
+	auto input = globals.input.ctor_scoped();
 	auto gfx = globals.gfx.ctor_scoped(globals.win.get().get_handle());
 	auto ss = globals.shaderStorage.ctor_scoped();
+	auto cam = globals.camera.ctor_scoped();
 
 	camCBuf.init(get_gfx().get_dev());
-	cam.init();
 
+	trackballCam.init();
 
 	cModelData mdlData;
 	mdlData.load("../data/jill.obj");
