@@ -1,7 +1,90 @@
 #include "common.hpp"
+#include "math.hpp"
 #include "gfx.hpp"
 
 #include <SDL_rwops.h>
+
+cGfx::sDev::sDev(DXGI_SWAP_CHAIN_DESC& sd, UINT flags) {
+	D3D_FEATURE_LEVEL lvl;
+
+	auto hr = ::D3D11CreateDeviceAndSwapChain(
+		nullptr, D3D_DRIVER_TYPE_HARDWARE,
+		nullptr,
+		flags,
+		nullptr, 0,
+		D3D11_SDK_VERSION,
+		&sd,
+		mpSwapChain.pp(),
+		mpDev.pp(),
+		&lvl,
+		mpImmCtx.pp());
+	if (!SUCCEEDED(hr))
+		throw sD3DException(hr, "D3D11CreateDeviceAndSwapChain failed");
+}
+
+cGfx::sDepthStencilBuffer::sDepthStencilBuffer(sDev& dev, UINT w, UINT h) {
+	auto desc = D3D11_TEXTURE2D_DESC();
+	desc.Width = w;
+	desc.Height = h;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+	HRESULT hr = dev.mpDev->CreateTexture2D(&desc, nullptr, mpTex.pp());
+	if (!SUCCEEDED(hr))
+		throw sD3DException(hr, "CreateTexture2D failed: depth stencil buffer");
+	
+	hr = dev.mpDev->CreateDepthStencilView(mpTex, nullptr, mpDSView.pp());
+	if (!SUCCEEDED(hr))
+		throw sD3DException(hr, "CreateDepthStencilView failed");
+}
+
+cGfx::sRTView::sRTView(sDev& dev) {
+	ID3D11Texture2D* pBack = nullptr;
+	HRESULT hr = dev.mpSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBack);
+	if (!SUCCEEDED(hr))
+		throw sD3DException(hr, "GetBuffer failed: back buffer");
+
+	hr = dev.mpDev->CreateRenderTargetView(pBack, nullptr, mpRTV.pp());
+	pBack->Release();
+
+	if (!SUCCEEDED(hr))
+		throw sD3DException(hr, "CreateRenderTargetView failed");
+}
+
+cGfx::sRSState::sRSState(sDev& dev) {
+	auto desc = D3D11_RASTERIZER_DESC();
+	desc.FillMode = D3D11_FILL_SOLID;
+	desc.CullMode = D3D11_CULL_NONE;
+	desc.FrontCounterClockwise = FALSE;
+	desc.DepthClipEnable = TRUE;
+	desc.ScissorEnable = FALSE;
+	desc.MultisampleEnable = FALSE;
+	desc.AntialiasedLineEnable = FALSE;
+
+	HRESULT hr = dev.mpDev->CreateRasterizerState(&desc, mpRSState.pp());
+	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateRasterizerState");
+
+	dev.mpImmCtx->RSSetState(mpRSState);
+}
+
+cGfx::sDSState::sDSState(sDev& dev) {
+	auto desc = D3D11_DEPTH_STENCIL_DESC();
+	desc.DepthEnable = false;
+	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	desc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	desc.StencilEnable = false;
+
+	HRESULT hr = dev.mpDev->CreateDepthStencilState(&desc, mpDSState.pp());
+	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateDepthStencilState");
+
+	dev.mpImmCtx->OMSetDepthStencilState(mpDSState, 0);
+}
 
 cGfx::cGfx(HWND hwnd) {
 	HRESULT hr = S_OK;
@@ -29,9 +112,11 @@ cGfx::cGfx(HWND hwnd) {
 
 	mDev = sDev(sd, devFlags);
 	mRTV = sRTView(mDev);
+	mDS = sDepthStencilBuffer(mDev, w, h);
 
 	ID3D11RenderTargetView* pv = mRTV.mpRTV;
-	mDev.mpImmCtx->OMSetRenderTargets(1, &pv, NULL);
+	ID3D11DepthStencilView* pdv = mDS.mpDSView;
+	mDev.mpImmCtx->OMSetRenderTargets(1, &pv, pdv);
 
 	auto vp = D3D11_VIEWPORT();
 	vp.TopLeftX = 0.0f;
@@ -49,6 +134,7 @@ cGfx::cGfx(HWND hwnd) {
 void cGfx::begin_frame() {
 	float clrClr[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	mDev.mpImmCtx->ClearRenderTargetView(mRTV.mpRTV, clrClr);
+	mDev.mpImmCtx->ClearDepthStencilView(mDS.mpDSView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
 void cGfx::end_frame() {

@@ -13,23 +13,7 @@ class cGfx : noncopyable {
 		moveable_ptr<ID3D11DeviceContext> mpImmCtx;
 
 		sDev() {}
-		sDev(DXGI_SWAP_CHAIN_DESC& sd, UINT flags) {
-			D3D_FEATURE_LEVEL lvl;
-
-			auto hr = ::D3D11CreateDeviceAndSwapChain(
-				nullptr, D3D_DRIVER_TYPE_HARDWARE,
-				nullptr,
-				flags,
-				nullptr, 0,
-				D3D11_SDK_VERSION,
-				&sd,
-				mpSwapChain.pp(),
-				mpDev.pp(),
-				&lvl,
-				mpImmCtx.pp());
-			if (!SUCCEEDED(hr))
-				throw sD3DException(hr, "D3D11CreateDeviceAndSwapChain failed");
-		}
+		sDev(DXGI_SWAP_CHAIN_DESC& sd, UINT flags);
 		sDev& operator=(sDev&& o) {
 			release();
 			mpSwapChain = std::move(o.mpSwapChain);
@@ -53,18 +37,7 @@ class cGfx : noncopyable {
 		moveable_ptr<ID3D11RenderTargetView> mpRTV;
 
 		sRTView() {}
-		sRTView(sDev& dev) {
-			ID3D11Texture2D* pBack = nullptr;
-			HRESULT hr = dev.mpSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBack);
-			if (!SUCCEEDED(hr))
-				throw sD3DException(hr, "GetBuffer failed: back buffer");
-
-			hr = dev.mpDev->CreateRenderTargetView(pBack, nullptr, mpRTV.pp());
-			pBack->Release();
-
-			if (!SUCCEEDED(hr))
-				throw sD3DException(hr, "CreateRenderTargetView failed");
-		}
+		sRTView(sDev& dev);
 		~sRTView() {
 			Release();
 		}
@@ -79,25 +52,39 @@ class cGfx : noncopyable {
 		}
 	};
 
+	struct sDepthStencilBuffer : noncopyable {
+		moveable_ptr<ID3D11Texture2D> mpTex;
+		moveable_ptr<ID3D11DepthStencilView> mpDSView;
+
+		sDepthStencilBuffer() {}
+		sDepthStencilBuffer(sDev& dev, UINT w, UINT h);
+		~sDepthStencilBuffer() {
+			Release();
+		}
+		sDepthStencilBuffer& operator=(sDepthStencilBuffer&& o) {
+			Release();
+			mpTex = std::move(o.mpTex);
+			mpDSView = std::move(o.mpDSView);
+			return *this;
+		}
+
+		void Release() {
+			if (mpTex) {
+				mpTex->Release(); 
+				mpTex.reset();
+			}
+			if (mpDSView) {
+				mpDSView->Release();
+				mpDSView.reset();
+			}
+		}
+	};
+
 	struct sRSState : noncopyable {
 		moveable_ptr<ID3D11RasterizerState> mpRSState;
 
 		sRSState() {}
-		sRSState(sDev& dev) {
-			auto desc = D3D11_RASTERIZER_DESC();
-			desc.FillMode = D3D11_FILL_SOLID;
-			desc.CullMode = D3D11_CULL_BACK;
-			desc.FrontCounterClockwise = FALSE;
-			desc.DepthClipEnable = TRUE;
-			desc.ScissorEnable = FALSE;
-			desc.MultisampleEnable = FALSE;
-			desc.AntialiasedLineEnable = FALSE;
-
-			HRESULT hr = dev.mpDev->CreateRasterizerState(&desc, mpRSState.pp());
-			if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateRasterizerState");
-
-			dev.mpImmCtx->RSSetState(mpRSState);
-		}
+		sRSState(sDev& dev);
 		~sRSState() {
 			if (mpRSState) mpRSState->Release();
 		}
@@ -108,8 +95,23 @@ class cGfx : noncopyable {
 		}
 	};
 
+	struct sDSState : noncopyable {
+		moveable_ptr<ID3D11DepthStencilState> mpDSState;
+		sDSState() {}
+		sDSState(sDev& dev);
+		~sDSState() {
+			if (mpDSState) mpDSState->Release();
+		}
+		sDSState(sDSState&& o) : mpDSState(std::move(o.mpDSState)) {}
+		sDSState& operator=(sDSState&& o) {
+			mpDSState = std::move(o.mpDSState);
+			return *this;
+		}
+	};
+
 	sDev mDev;
 	sRTView mRTV;
+	sDepthStencilBuffer mDS;
 	sRSState mRSState;
 
 public:
@@ -178,3 +180,4 @@ private:
 
 cGfx& get_gfx();
 cShaderStorage& get_shader_storage();
+vec2i get_window_size();

@@ -1,10 +1,12 @@
+#define NOMINMAX
+
 #include <SDL.h>
 #include <SDL_main.h>
 #include <SDL_syswm.h>
 
 #include "common.hpp"
-#include "gfx.hpp"
 #include "math.hpp"
+#include "gfx.hpp"
 #include "rdr.hpp"
 #include "model.hpp"
 
@@ -28,7 +30,7 @@ public:
 
 class cSDLWindow {
 	moveable_ptr<SDL_Window> win;
-
+	vec2i mWindowSize;
 public:
 	cSDLWindow(cstr title, int x, int y, int w, int h, Uint32 flags) {
 		init(title, x, y, w, h, flags);
@@ -55,9 +57,12 @@ public:
 		return hwnd;
 	}
 
+	vec2i get_window_size() const { return mWindowSize; }
+
 private:
 	void init(cstr title, int x, int y, int w, int h, Uint32 flags) {
 		win = SDL_CreateWindow(title.p, x, y, w, h, flags);
+		mWindowSize = { w, h };
 	}
 	void deinit() {
 		if (!win) return;
@@ -137,6 +142,7 @@ cShaderStorage& get_shader_storage() { return globals.shaderStorage.get(); }
 
 
 
+vec2i get_window_size() { return globals.win.get().get_window_size(); }
 
 struct sTestCBuf {
 	XMFLOAT4 diffClr;
@@ -389,7 +395,7 @@ void loop() {
 
 int main(int argc, char* argv[]) {
 	cSDLInit sdl;
-	auto win = globals.win.ctor_scoped("TestBed", 640, 480, 0);
+	auto win = globals.win.ctor_scoped("TestBed", 1200, 900, 0);
 	auto gfx = globals.gfx.ctor_scoped(globals.win.get().get_handle());
 	auto ss = globals.shaderStorage.ctor_scoped();
 

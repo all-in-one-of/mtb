@@ -24,7 +24,7 @@ bool cModelData::load(cstr filepath) {
 		aiPrimitiveType_LINE | aiPrimitiveType_POINT | aiPrimitiveType_POLYGON);
 
 	aiScene const* pScene = importer.ReadFile(filepath, 
-		/*aiProcess_FlipUVs |*/ /*aiProcess_FlipWindingOrder |*/ aiProcess_SortByPType);
+		/*aiProcess_FlipUVs |*/ aiProcess_FlipWindingOrder | aiProcess_SortByPType);
 	if (!pScene) {
 		// todo: log importer.GetErrorString()
 		return false;
