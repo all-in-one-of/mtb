@@ -45,9 +45,30 @@ struct moveable_ptr {
 	void reset() { p = nullptr; }
 };
 
+template <int A> struct aligned;
+template <> struct __declspec(align(1)) aligned < 1 > {};
+template <> struct __declspec(align(2)) aligned < 2 > {};
+template <> struct __declspec(align(4)) aligned < 4 > {};
+template <> struct __declspec(align(8)) aligned < 8 > {};
+template <> struct __declspec(align(16)) aligned < 16 > {};
+template <> struct __declspec(align(32)) aligned < 32 > {};
+
+template <int size, int align>
+union aligned_type {
+	aligned<align> mAligned;
+	char mPad[size];
+};
+
+template <int size, int align>
+struct aligned_storage {
+	using type = aligned_type < size, align > ;
+};
+
+
 template <typename T>
 class GlobalSingleton {
-	typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type mData;
+	using Storage = typename aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
+	Storage mData;
 public:
 	struct sScope : noncopyable {
 		GlobalSingleton<T>& obj;
