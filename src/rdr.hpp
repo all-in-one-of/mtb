@@ -62,6 +62,17 @@ public:
 	}
 };
 
+template <typename T, int slot>
+class cConstBufferSlotted : public cConstBuffer<T> {
+public: 
+	void set_VS(ID3D11DeviceContext* pCtx) {
+		cConstBuffer<T>::set_VS(pCtx, slot);
+	}
+	void set_PS(ID3D11DeviceContext* pCtx) {
+		cConstBuffer<T>::set_PS(pCtx, slot);
+	}
+};
+
 class cVertexBuffer : public cBufferBase {
 	uint32_t mVtxSize = 0;
 public:
@@ -91,4 +102,28 @@ public:
 
 	void init(ID3D11Device* pDev, void const* pIdxData, uint32_t idxCount, DXGI_FORMAT format);
 	void set(ID3D11DeviceContext* pCtx, uint32_t offset) const;
+};
+
+
+struct sCameraCBuf {
+	DirectX::XMMATRIX viewProj;
+	DirectX::XMMATRIX view;
+	DirectX::XMMATRIX proj;
+};
+
+struct sMeshCBuf {
+	DirectX::XMMATRIX wmtx;
+};
+
+class cConstBufStorage {
+public:
+	cConstBufferSlotted<sCameraCBuf, 0> mCameraCBuf;
+	cConstBufferSlotted<sMeshCBuf, 1> mMeshCBuf;
+
+	cConstBufStorage(ID3D11Device* pDev) {
+		mCameraCBuf.init(pDev);
+		mMeshCBuf.init(pDev);
+	}
+
+	static cConstBufStorage& get();
 };

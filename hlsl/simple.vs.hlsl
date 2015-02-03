@@ -1,14 +1,6 @@
 #include "shader.hlsli"
 
-cbuffer Mesh : register(b0) {
-	float4x4 g_world;
-};
 
-cbuffer Camera : register(b1) {
-	float4x4 g_viewProj;
-	float4x4 g_view;
-	float4x4 g_proj;
-};
 
 void main(sVSSimple vin, out sPSSimple vout) 
 {

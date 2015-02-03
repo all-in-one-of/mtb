@@ -121,25 +121,27 @@ bool cModel::init(cModelData const& mdlData) {
 	mpData = &mdlData;
 		
 	auto& ss = get_shader_storage();
-	mpVS = ss.load_VS("simple.vs.cso");
+	mpVS = ss.load_VS("model_solid.vs.cso");
 	mpPS = ss.load_PS("simple.ps.cso");
 
 	D3D11_INPUT_ELEMENT_DESC vdsc[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, nrm), D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, nrm), D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 	auto pDev = get_gfx().get_dev();
 	auto& code = mpVS->get_code();
 	HRESULT hr = pDev->CreateInputLayout(vdsc, SIZEOF_ARRAY(vdsc), code.get_code(), code.get_size(), &mpIL);
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
 
-	mConstBuf.init(pDev);
-
 	return true;
 }
 
 void cModel::deinit() {
 	mpData = nullptr;
+	if (mpIL) {
+		mpIL->Release();
+		mpIL = nullptr;
+	}
 }
 
 void cModel::disp() {
@@ -147,12 +149,11 @@ void cModel::disp() {
 
 	auto pCtx = get_gfx().get_ctx();
 
-	//mConstBuf.mData.wmtx = dx::XMMatrixIdentity();
-	mConstBuf.mData.wmtx = DirectX::XMMatrixTranslation(0, 0, 0);
-	mConstBuf.update(pCtx);
-	mConstBuf.set_VS(pCtx, 0);
-
-	//camCBuf.set_VS(pCtx, 1);
+	auto& meshCBuf = cConstBufStorage::get().mMeshCBuf;
+	//meshCBuf.mData.wmtx = dx::XMMatrixIdentity();
+	meshCBuf.mData.wmtx = DirectX::XMMatrixTranslation(0, 0, 0);
+	meshCBuf.update(pCtx);
+	meshCBuf.set_VS(pCtx);
 
 	pCtx->IASetInputLayout(mpIL);
 

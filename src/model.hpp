@@ -48,11 +48,6 @@ class cModel {
 	cShader* mpVS = nullptr;
 	cShader* mpPS = nullptr;
 	ID3D11InputLayout* mpIL = nullptr;
-
-	struct sMeshCBuf {
-		DirectX::XMMATRIX wmtx;
-	};
-	cConstBuffer<sMeshCBuf> mConstBuf;
 public:
 	cModel() {}
 	~cModel() {}

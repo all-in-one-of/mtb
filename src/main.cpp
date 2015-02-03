@@ -80,6 +80,7 @@ struct sGlobals {
 	GlobalSingleton<cShaderStorage> shaderStorage;
 	GlobalSingleton<cInputMgr> input;
 	GlobalSingleton<cCamera> camera;
+	GlobalSingleton<cConstBufStorage> cbufStorage;
 };
 
 sGlobals globals;
@@ -89,19 +90,7 @@ cShaderStorage& get_shader_storage() { return globals.shaderStorage.get(); }
 cInputMgr& get_input_mgr() { return globals.input.get(); }
 cCamera& get_camera() { return globals.camera.get(); }
 vec2i get_window_size() { return globals.win.get().get_window_size(); }
-
-struct sTestCBuf {
-	XMFLOAT4 diffClr;
-};
-
-struct sCameraCBuf {
-	dx::XMMATRIX viewProj;
-	dx::XMMATRIX view;
-	dx::XMMATRIX proj;
-};
-
-cConstBuffer<sCameraCBuf> camCBuf;
-
+cConstBufStorage& cConstBufStorage::get() { return globals.cbufStorage.get(); }
 
 
 class cGnomon {
@@ -110,15 +99,11 @@ class cGnomon {
 		float mClr[4];
 	};
 
-	struct sMeshCBuf {
-		dx::XMMATRIX wmtx;
-	};
 
 	cShader* mpVS = nullptr;
 	cShader* mpPS = nullptr;
 	ID3D11InputLayout* mpIL = nullptr;
 	cVertexBuffer mVtxBuf;
-	cConstBuffer<sMeshCBuf> mConstBuf;
 	int mState = 0;
 public:
 
@@ -137,11 +122,10 @@ public:
 		auto pCtx = get_gfx().get_ctx();
 
 		//mConstBuf.mData.wmtx = dx::XMMatrixIdentity();
-		mConstBuf.mData.wmtx = dx::XMMatrixTranslation(0, 0, 0);
-		mConstBuf.update(pCtx);
-		mConstBuf.set_VS(pCtx, 0);
-
-		camCBuf.set_VS(pCtx, 1);
+		auto& cbuf = cConstBufStorage::get().mMeshCBuf;
+		cbuf.mData.wmtx = dx::XMMatrixTranslation(0, 0, 0);
+		cbuf.update(pCtx);
+		cbuf.set_VS(pCtx);
 
 		UINT pStride[] = { sizeof(sVtx) };
 		UINT pOffset[] = { 0 };
@@ -182,7 +166,6 @@ private:
 		};
 
 		mVtxBuf.init(pDev, vtx, SIZEOF_ARRAY(vtx), sizeof(vtx[0]));
-		mConstBuf.init(pDev);
 	}
 
 	void state_deinit() {
@@ -193,97 +176,6 @@ private:
 
 
 
-class cObj {
-	struct sVtx {
-		float mPos[3];
-		float mClr[4];
-	};
-
-	struct sMeshCBuf {
-		dx::XMMATRIX wmtx;
-	};
-
-	cShader* mpVS = nullptr;
-	cShader* mpPS = nullptr;
-	ID3D11InputLayout* mpIL = nullptr;
-	cVertexBuffer mVtxBuf;
-	cIndexBuffer mIdxBuf;
-	cConstBuffer<sMeshCBuf> mConstBuf;
-	int mState = 0;
-public:
-
-	void exec() {
-		switch (mState) {
-		case 0:
-			state_init();
-			mState++;
-			break;
-		case 2:
-			state_deinit();
-			break;
-		}
-	}
-	void disp() {
-		auto pCtx = get_gfx().get_ctx();
-
-		//mConstBuf.mData.wmtx = dx::XMMatrixIdentity();
-		mConstBuf.mData.wmtx = dx::XMMatrixTranslation(0, 0, 1);
-		mConstBuf.update(pCtx);
-		mConstBuf.set_VS(pCtx, 0);
-
-		camCBuf.set_VS(pCtx, 1);
-
-		UINT pStride[] = { sizeof(sVtx) };
-		UINT pOffset[] = { 0 };
-		mIdxBuf.set(pCtx, 0);
-		mVtxBuf.set(pCtx, 0, 0);
-		pCtx->IASetInputLayout(mpIL);
-		pCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		pCtx->VSSetShader(mpVS->asVS(), nullptr, 0);
-		pCtx->PSSetShader(mpPS->asPS(), nullptr, 0);
-		//pCtx->Draw(3, 0);
-		pCtx->DrawIndexed(3, 0, 0);
-	}
-
-	void deinit() {
-		mState = 2;
-		exec();
-	}
-private:
-	void state_init() {
-		auto& ss = get_shader_storage();
-		mpVS = ss.load_VS("simple.vs.cso");
-		mpPS = ss.load_PS("simple.ps.cso");
-
-		D3D11_INPUT_ELEMENT_DESC vdsc[] = {
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sVtx, mPos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(sVtx, mClr), D3D11_INPUT_PER_VERTEX_DATA, 0 }
-		};
-		auto pDev = get_gfx().get_dev();
-		auto& code = mpVS->get_code();
-		HRESULT hr = pDev->CreateInputLayout(vdsc, SIZEOF_ARRAY(vdsc), code.get_code(), code.get_size(), &mpIL);
-		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
-
-		sVtx vtx[3] = {
-			{ 0.0f, 0.5f, 0.0f,     1.0, 0.0f, 0.0f, 1.0f },
-			{ 0.5f, -0.5f, 0.0f,    0.0, 1.0f, 0.0f, 1.0f },
-			{ -0.5f, -0.5f, 0.0f,   0.0, 0.0f, 1.0f, 1.0f }
-		};
-		uint16_t idx[3] = { 0, 1, 2 };
-
-		mVtxBuf.init(pDev, vtx, SIZEOF_ARRAY(vtx), sizeof(vtx[0]));
-		mIdxBuf.init(pDev, idx, SIZEOF_ARRAY(idx), DXGI_FORMAT_R16_UINT);
-		mConstBuf.init(pDev);
-	}
-
-	void state_deinit() {
-		mVtxBuf.deinit();
-		mIdxBuf.deinit();
-		if (mpIL) mpIL->Release();
-	}
-};
-
-cObj obj;
 cGnomon gnomon;
 cModel model;
 
@@ -302,11 +194,12 @@ void do_frame() {
 	//cam.recalc();
 	auto& cam = get_camera();
 	trackballCam.update(cam);
+	auto& camCBuf = cConstBufStorage::get().mCameraCBuf;
 	camCBuf.mData.viewProj = cam.mView.mViewProj;
 	camCBuf.mData.view = cam.mView.mView;
 	camCBuf.mData.proj = cam.mView.mProj;
 	camCBuf.update(gfx.get_ctx());
-	camCBuf.set_VS(gfx.get_ctx(), 1);
+	camCBuf.set_VS(gfx.get_ctx());
 
 	//obj.exec();
 	//obj.disp();
@@ -344,7 +237,7 @@ void loop() {
 		if (!quit) {
 			do_frame();
 		} else {
-			obj.deinit();
+			//obj.deinit();
 			gnomon.deinit();
 		}
 	}
@@ -357,9 +250,8 @@ int main(int argc, char* argv[]) {
 	auto input = globals.input.ctor_scoped();
 	auto gfx = globals.gfx.ctor_scoped(globals.win.get().get_handle());
 	auto ss = globals.shaderStorage.ctor_scoped();
+	auto cbuf = globals.cbufStorage.ctor_scoped(get_gfx().get_dev());
 	auto cam = globals.camera.ctor_scoped();
-
-	camCBuf.init(get_gfx().get_dev());
 
 	trackballCam.init();
 
