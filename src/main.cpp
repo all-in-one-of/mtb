@@ -287,101 +287,6 @@ cObj obj;
 cGnomon gnomon;
 cModel model;
 
-class cTrackballCam {
-	cTrackball tb;
-public:
-	void init() {
-	}
-
-	void update() {
-		bool updated = false;
-		updated = updated || update_trackball();
-		updated = updated || update_distance();
-		updated = updated || update_translation();
-		if (updated) {
-			auto& cam = get_camera();
-			cam.recalc();
-		}
-	}
-protected:
-	bool update_trackball() {
-		auto& input = get_input_mgr();
-		const auto btn = cInputMgr::EMBMIDDLE;
-		if (!input.mbtn_state(btn)) return false;
-		auto pos = input.mMousePos;
-		//auto prev = input.mMousePosStart[btn];
-		auto prev = input.mMousePosPrev;
-		if (pos == prev) return false;
-
-		tb.update(pos, prev);
-		auto& cam = get_camera();
-		tb.apply(cam);
-		return true;
-	}
-
-	bool update_distance() {
-		auto& input = get_input_mgr();
-		const auto btn = cInputMgr::EMBRIGHT;
-		if (!input.mbtn_holded(btn)) return false;
-
-		auto pos = input.mMousePos;
-		auto prev = input.mMousePosPrev;
-
-		int dy = pos.y - prev.y;
-		if (dy == 0) return false;
-		float scale;
-		float speed = 0.08f;
-		if (dy < 0) {
-			scale = 1.0f - ::log10f((float)clamp(-dy, 1, 10)) * speed;
-		} else {
-			scale = 1.0f + ::log10f((float)clamp(dy, 1, 10)) * speed;
-		}
-
-		auto& cam = get_camera();
-		auto dir = dx::XMVectorSubtract(cam.mPos, cam.mTgt);
-		dir = dx::XMVectorScale(dir, scale);
-		cam.mPos = dx::XMVectorAdd(dir, cam.mTgt);
-
-		return true;
-	}
-
-	bool update_translation() {
-		auto& input = get_input_mgr();
-		//const auto btn = cInputMgr::EMBMIDDLE;
-		const auto btn = cInputMgr::EMBLEFT;
-		if (!input.mbtn_holded(btn)) return false;
-
-		auto pos = input.mMousePos;
-		auto prev = input.mMousePosPrev;
-
-		auto dt = pos - prev;
-		if (dt == vec2i(0, 0)) return false;
-
-		vec2f dtf = dt;
-		dtf = dtf * 0.001f;
-
-		auto& cam = get_camera();
-		auto cpos = cam.mPos;
-		auto ctgt = cam.mTgt;
-		auto cup = cam.mUp;
-		auto cdir = dx::XMVectorSubtract(cpos, ctgt);
-		auto side = dx::XMVector3Cross(cdir, cup); // reverse direction
-
-		float len = dx::XMVectorGetX(dx::XMVector3LengthEst(cdir));
-
-		auto move = dx::XMVectorSet(dtf.x, dtf.y * len, 0, 0);
-		//move = dx::XMVectorScale(move, len);
-
-		dx::XMMATRIX b(side, cup, cdir, dx::g_XMZero);
-		move = dx::XMVector3Transform(move, b);
-
-		cam.mPos = dx::XMVectorAdd(cpos, move);
-		cam.mTgt = dx::XMVectorAdd(ctgt, move);
-
-		return true;
-	}
-};
-
 cTrackballCam trackballCam;
 
 float camRot = DEG2RAD(0.01f);
@@ -396,7 +301,7 @@ void do_frame() {
 	//cam.mPos = dx::XMVector4Transform(cp, m);
 	//cam.recalc();
 	auto& cam = get_camera();
-	trackballCam.update();
+	trackballCam.update(cam);
 	camCBuf.mData.viewProj = cam.mView.mViewProj;
 	camCBuf.mData.view = cam.mView.mView;
 	camCBuf.mData.proj = cam.mView.mProj;

@@ -1,6 +1,7 @@
 #include "math.hpp"
 #include "camera.hpp"
 #include "common.hpp"
+#include "input.hpp"
 
 namespace dx = DirectX;
 
@@ -104,4 +105,89 @@ void cTrackball::apply(cCamera& cam, DirectX::XMVECTOR dir) {
 void cTrackball::set_home() {
 	mQuat = dx::XMQuaternionIdentity();
 	mSpin = dx::XMQuaternionIdentity();
+}
+
+void cTrackballCam::update(cCamera& cam) {
+	bool updated = false;
+	updated = updated || update_trackball(cam);
+	updated = updated || update_distance(cam);
+	updated = updated || update_translation(cam);
+	if (updated) {
+		cam.recalc();
+	}
+}
+
+bool cTrackballCam::update_trackball(cCamera& cam) {
+	auto& input = get_input_mgr();
+	const auto btn = cInputMgr::EMBMIDDLE;
+	if (!input.mbtn_state(btn)) return false;
+	auto pos = input.mMousePos;
+	//auto prev = input.mMousePosStart[btn];
+	auto prev = input.mMousePosPrev;
+	if (pos == prev) return false;
+
+	tb.update(pos, prev);
+	tb.apply(cam);
+	return true;
+}
+
+bool cTrackballCam::update_distance(cCamera& cam) {
+	auto& input = get_input_mgr();
+	const auto btn = cInputMgr::EMBRIGHT;
+	if (!input.mbtn_holded(btn)) return false;
+
+	auto pos = input.mMousePos;
+	auto prev = input.mMousePosPrev;
+
+	int dy = pos.y - prev.y;
+	if (dy == 0) return false;
+	float scale;
+	float speed = 0.08f;
+	if (dy < 0) {
+		scale = 1.0f - ::log10f((float)clamp(-dy, 1, 10)) * speed;
+	}
+	else {
+		scale = 1.0f + ::log10f((float)clamp(dy, 1, 10)) * speed;
+	}
+
+	auto dir = dx::XMVectorSubtract(cam.mPos, cam.mTgt);
+	dir = dx::XMVectorScale(dir, scale);
+	cam.mPos = dx::XMVectorAdd(dir, cam.mTgt);
+
+	return true;
+}
+
+bool cTrackballCam::update_translation(cCamera& cam) {
+	auto& input = get_input_mgr();
+	//const auto btn = cInputMgr::EMBMIDDLE;
+	const auto btn = cInputMgr::EMBLEFT;
+	if (!input.mbtn_holded(btn)) return false;
+
+	auto pos = input.mMousePos;
+	auto prev = input.mMousePosPrev;
+
+	auto dt = pos - prev;
+	if (dt == vec2i(0, 0)) return false;
+
+	vec2f dtf = dt;
+	dtf = dtf * 0.001f;
+
+	auto cpos = cam.mPos;
+	auto ctgt = cam.mTgt;
+	auto cup = cam.mUp;
+	auto cdir = dx::XMVectorSubtract(cpos, ctgt);
+	auto side = dx::XMVector3Cross(cdir, cup); // reverse direction
+
+	float len = dx::XMVectorGetX(dx::XMVector3LengthEst(cdir));
+
+	auto move = dx::XMVectorSet(dtf.x, dtf.y * len, 0, 0);
+	//move = dx::XMVectorScale(move, len);
+
+	dx::XMMATRIX b(side, cup, cdir, dx::g_XMZero);
+	move = dx::XMVector3Transform(move, b);
+
+	cam.mPos = dx::XMVectorAdd(cpos, move);
+	cam.mTgt = dx::XMVectorAdd(ctgt, move);
+
+	return true;
 }

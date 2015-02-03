@@ -45,3 +45,16 @@ public:
 	void apply(cCamera& cam, DirectX::XMVECTOR dir);
 	void set_home();
 };
+
+class cTrackballCam {
+	cTrackball tb;
+public:
+	void init() {
+	}
+
+	void update(cCamera& cam);
+protected:
+	bool update_trackball(cCamera& cam);
+	bool update_distance(cCamera& cam);
+	bool update_translation(cCamera& cam);
+};
