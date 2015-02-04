@@ -4,6 +4,7 @@ public:
 		DirectX::XMMATRIX mView;
 		DirectX::XMMATRIX mProj;
 		DirectX::XMMATRIX mViewProj;
+		DirectX::XMVECTOR mPos;
 
 		void calc_view(DirectX::XMVECTOR const& pos, DirectX::XMVECTOR const& tgt, DirectX::XMVECTOR const& up);
 		void calc_proj(float fovY, float aspect, float nearZ, float farZ);

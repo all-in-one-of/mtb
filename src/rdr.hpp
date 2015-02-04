@@ -109,6 +109,7 @@ struct sCameraCBuf {
 	DirectX::XMMATRIX viewProj;
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX proj;
+	DirectX::XMVECTOR camPos;
 };
 
 struct sMeshCBuf {

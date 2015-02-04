@@ -122,7 +122,7 @@ bool cModel::init(cModelData const& mdlData) {
 		
 	auto& ss = get_shader_storage();
 	mpVS = ss.load_VS("model_solid.vs.cso");
-	mpPS = ss.load_PS("simple.ps.cso");
+	mpPS = ss.load_PS("model.ps.cso");
 
 	D3D11_INPUT_ELEMENT_DESC vdsc[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -151,7 +151,9 @@ void cModel::disp() {
 
 	auto& meshCBuf = cConstBufStorage::get().mMeshCBuf;
 	//meshCBuf.mData.wmtx = dx::XMMatrixIdentity();
-	meshCBuf.mData.wmtx = DirectX::XMMatrixTranslation(0, 0, 0);
+	//meshCBuf.mData.wmtx = DirectX::XMMatrixTranslation(0, 0, 0);
+	//meshCBuf.mData.wmtx = DirectX::XMMatrixRotationY(DEG2RAD(180));
+	meshCBuf.mData.wmtx = DirectX::XMMatrixScaling(0.3f, 0.3f, 0.3f);
 	meshCBuf.update(pCtx);
 	meshCBuf.set_VS(pCtx);
 

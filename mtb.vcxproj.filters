@@ -64,6 +64,9 @@
     <FxCompile Include="hlsl\model_solid.vs.hlsl">
       <Filter>hlsl</Filter>
     </FxCompile>
+    <FxCompile Include="hlsl\model.ps.hlsl">
+      <Filter>hlsl</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="hlsl\shader.hlsli">

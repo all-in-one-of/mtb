@@ -198,6 +198,7 @@ void do_frame() {
 	camCBuf.mData.viewProj = cam.mView.mViewProj;
 	camCBuf.mData.view = cam.mView.mView;
 	camCBuf.mData.proj = cam.mView.mProj;
+	camCBuf.mData.camPos = cam.mView.mPos;
 	camCBuf.update(gfx.get_ctx());
 	camCBuf.set_VS(gfx.get_ctx());
 
@@ -256,7 +257,8 @@ int main(int argc, char* argv[]) {
 	trackballCam.init();
 
 	cModelData mdlData;
-	mdlData.load("../data/jill.obj");
+	//mdlData.load("../data/jill.obj");
+	mdlData.load("../data/lightning.ply");
 
 	model.init(mdlData);
 
