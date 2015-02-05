@@ -2,6 +2,7 @@
 #include <string>
 
 struct sModelVtx;
+class cTexture;
 
 struct sGroup {
 	uint32_t mVtxOffset;
@@ -42,13 +43,21 @@ public:
 };
 
 
+struct sGroupMaterial {
+	cTexture* mpTexBase = nullptr;
+	ID3D11SamplerState* mpSmpBase = nullptr;
+};
+
 class cModel {
 	cModelData const* mpData = nullptr;
 
 	cShader* mpVS = nullptr;
 	cShader* mpPS = nullptr;
 	ID3D11InputLayout* mpIL = nullptr;
+
 public:
+	std::unique_ptr<sGroupMaterial[]> mpGrpMtl;
+	
 	cModel() {}
 	~cModel() {}
 

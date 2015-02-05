@@ -63,3 +63,34 @@ void cIndexBuffer::init(ID3D11Device* pDev, void const* pIdxData, uint32_t idxCo
 void cIndexBuffer::set(ID3D11DeviceContext* pCtx, uint32_t offset) const {
 	pCtx->IASetIndexBuffer(mpBuf, mFormat, offset);
 }
+
+
+cSamplerStates::cSamplerStates(ID3D11Device* pDev) {
+	HRESULT hr;
+	hr = pDev->CreateSamplerState(&linear_desc(), &mpLinear);
+	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateSamplerState linear failed");
+}
+
+cSamplerStates::~cSamplerStates() {
+	if (mpLinear) {
+		mpLinear->Release();
+		mpLinear = nullptr;
+	}
+}
+
+D3D11_SAMPLER_DESC cSamplerStates::linear_desc() {
+	auto desc = D3D11_SAMPLER_DESC();
+
+	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	//desc.MipLODBias = 0.0f;
+	desc.MaxAnisotropy = 1;
+	desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	//desc.BorderColor[0] = desc.BorderColor[1] = desc.BorderColor[2] = desc.BorderColor[3] = 0;
+	//desc.MinLOD = 0;
+	desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	return desc;
+}

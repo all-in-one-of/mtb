@@ -4,6 +4,7 @@
 struct sModelVtx {
 	vec3 pos;
 	vec3 nrm;
+	vec2f uv;
 };
 
 
@@ -127,4 +128,18 @@ public:
 	}
 
 	static cConstBufStorage& get();
+};
+
+
+class cSamplerStates {
+	ID3D11SamplerState* mpLinear = nullptr;
+public:
+	static cSamplerStates& get();
+
+	cSamplerStates(ID3D11Device* pDev);
+	~cSamplerStates();
+
+	ID3D11SamplerState* linear() const { return mpLinear; }
+
+	static D3D11_SAMPLER_DESC linear_desc();
 };

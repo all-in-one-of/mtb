@@ -14,12 +14,14 @@ struct sPSSimple{
 struct sVSModelSolid {
 	float3 pos : POSITION;
 	float3 nrm : NORMAL;
+	float2 uv : TEXCOORD;
 };
 
 struct sPSModel {
 	float4 cpos : SV_POSITION;
 	float4 wpos : POSITION;
 	float3 wnrm : NORMAL;
+	float2 uv : TEXCOORD;
 };
 
 
@@ -34,3 +36,5 @@ cbuffer Mesh : register(b1) {
 	float4x4 g_world;
 };
 
+Texture2D g_meshDiffTex : register(t0);
+SamplerState g_meshDiffSmp : register(s0);

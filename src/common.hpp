@@ -22,6 +22,27 @@ public:
 	cstr(char const* p) : p(p) {}
 
 	operator char const* () const { return p; }
+
+	size_t length() const {
+		if (p)
+			return ::strlen(p);
+		else
+			return 0;
+	}
+
+	bool ends_with(cstr suffix) const {
+		size_t sl = suffix.length();
+		size_t l = length();
+		if (l < sl) return false;
+		return (0 == ::memcmp(&p[l - sl], suffix.p, sl));
+	}
+
+	bool starts_with(cstr prefix) const {
+		size_t sl = prefix.length();
+		size_t l = length();
+		if (l < sl) return false;
+		return (0 == ::memcmp(p, prefix.p, sl));
+	}
 };
 
 template <typename T>

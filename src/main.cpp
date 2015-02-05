@@ -11,6 +11,7 @@
 #include "model.hpp"
 #include "input.hpp"
 #include "camera.hpp"
+#include "texture.hpp"
 
 namespace dx = DirectX;
 using dx::XMFLOAT4;
@@ -81,6 +82,7 @@ struct sGlobals {
 	GlobalSingleton<cInputMgr> input;
 	GlobalSingleton<cCamera> camera;
 	GlobalSingleton<cConstBufStorage> cbufStorage;
+	GlobalSingleton<cSamplerStates> samplerStates;
 };
 
 sGlobals globals;
@@ -91,7 +93,7 @@ cInputMgr& get_input_mgr() { return globals.input.get(); }
 cCamera& get_camera() { return globals.camera.get(); }
 vec2i get_window_size() { return globals.win.get().get_window_size(); }
 cConstBufStorage& cConstBufStorage::get() { return globals.cbufStorage.get(); }
-
+cSamplerStates& cSamplerStates::get() { return globals.samplerStates.get(); }
 
 class cGnomon {
 	struct sVtx {
@@ -175,9 +177,47 @@ private:
 };
 
 
+class cLightning {
+	cModel mModel;
+	cModelData mMdlData;
+	std::unique_ptr<cTexture[]> mpTextures;
+public:
+
+	void init() {
+		//mdlData.load("../data/jill.obj");
+		mMdlData.load("../data/lightning.obj");
+
+		mModel.init(mMdlData);
+
+		mModel.mpGrpMtl = std::make_unique<sGroupMaterial[]>(mMdlData.mGrpNum);
+		auto* pMtls = mModel.mpGrpMtl.get();
+
+		mpTextures = std::make_unique<cTexture[]>(mMdlData.mGrpNum);
+		
+		auto pDev = get_gfx().get_dev();
+		char buf[512];
+		for (uint32_t i = 0; i < mMdlData.mGrpNum; ++i) {
+			::sprintf_s(buf, "../data/lightning_tex/%s_base.dds", mMdlData.mpGrpNames[i].c_str());
+			mpTextures[i].load(pDev, buf);
+			pMtls[i].mpTexBase = &mpTextures[i];
+			pMtls[i].mpSmpBase = cSamplerStates::get().linear();
+		}
+	}
+
+	void deinit() {
+		mModel.deinit();
+		mMdlData.unload();
+		mpTextures.release();
+	}
+
+	void disp() {
+		mModel.disp();
+	}
+};
+
 
 cGnomon gnomon;
-cModel model;
+cLightning lightning;
 
 cTrackballCam trackballCam;
 
@@ -205,7 +245,7 @@ void do_frame() {
 	//obj.exec();
 	//obj.disp();
 
-	model.disp();
+	lightning.disp();
 
 	gnomon.exec();
 	gnomon.disp();
@@ -252,15 +292,12 @@ int main(int argc, char* argv[]) {
 	auto gfx = globals.gfx.ctor_scoped(globals.win.get().get_handle());
 	auto ss = globals.shaderStorage.ctor_scoped();
 	auto cbuf = globals.cbufStorage.ctor_scoped(get_gfx().get_dev());
+	auto smps = globals.samplerStates.ctor_scoped(get_gfx().get_dev());
 	auto cam = globals.camera.ctor_scoped();
 
 	trackballCam.init();
 
-	cModelData mdlData;
-	//mdlData.load("../data/jill.obj");
-	mdlData.load("../data/lightning.ply");
-
-	model.init(mdlData);
+	lightning.init();
 
 	loop();
 

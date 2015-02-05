@@ -3,6 +3,7 @@
 #include "rdr.hpp"
 #include "gfx.hpp"
 #include "model.hpp"
+#include "texture.hpp"
 
 
 #include <assimp/Importer.hpp>
@@ -15,6 +16,22 @@
 
 static vec3 as_vec3(aiVector3D const& v) {
 	return { { v.x, v.y, v.z } };
+}
+static vec2f as_vec2f(aiVector3D const& v) {
+	return {v.x, v.y};
+}
+
+struct sAIMeshInfo {
+	aiMesh* mpMesh;
+	cstr mName;
+};
+static void list_meshes(aiNode* pNode, std::vector<sAIMeshInfo>& meshes, aiScene const* pScene) {
+	if (pNode->mNumMeshes > 0) {
+		meshes.push_back({ pScene->mMeshes[pNode->mMeshes[0]], pNode->mName.C_Str()});
+	}
+	for (uint32_t i = 0; i < pNode->mNumChildren; ++i) {
+		list_meshes(pNode->mChildren[i], meshes, pScene);
+	}
 }
 
 bool cModelData::load(cstr filepath) {
@@ -29,13 +46,16 @@ bool cModelData::load(cstr filepath) {
 		// todo: log importer.GetErrorString()
 		return false;
 	}
+	
+	std::vector<sAIMeshInfo> meshes(pScene->mNumMeshes);
+	list_meshes(pScene->mRootNode, meshes, pScene);
 
 	int numVtx = 0;
 	int numIdx = 0;
-	int numGrp = pScene->mNumMeshes;
+	int numGrp = (int)meshes.size();
 
-	for (int i = 0; i < numGrp; ++i) {
-		aiMesh* pMesh = pScene->mMeshes[i];
+	for (auto& mi : meshes) {
+		aiMesh* pMesh = mi.mpMesh;
 
 		numVtx += pMesh->mNumVertices;
 
@@ -56,8 +76,8 @@ bool cModelData::load(cstr filepath) {
 	auto pGrpItr = pGroups.get();
 	auto pNamesItr = pNames.get();
 
-	for (int i = 0; i < numGrp; ++i) {
-		aiMesh* pMesh = pScene->mMeshes[i];
+	for (auto& mi : meshes) {
+		aiMesh* pMesh = mi.mpMesh;
 
 		auto pVtxGrpStart = pVtxItr;
 		auto pIdxGrpStart = pIdxItr;
@@ -65,14 +85,24 @@ bool cModelData::load(cstr filepath) {
 		const int meshVtx = pMesh->mNumVertices;
 		aiVector3D const* pAIVtx = pMesh->mVertices;
 		aiVector3D const* pAINrm = pMesh->mNormals;
+		aiVector3D const* pAITex = pMesh->mTextureCoords[0];
 
 		for (int vtx = 0; vtx < meshVtx; ++vtx) {
 			pVtxItr->pos = as_vec3(*pAIVtx);
+			++pAIVtx;
+
 			pVtxItr->nrm = as_vec3(*pAINrm);
+			++pAINrm;
+
+			if (pAITex) {
+				pVtxItr->uv = as_vec2f(*pAITex);
+				pVtxItr->uv.y = -pVtxItr->uv.y;
+				++pAITex;
+			} else {
+				pVtxItr->uv = { 0.0f, 0.0f };
+			}
 
 			++pVtxItr;
-			++pAIVtx;
-			++pAINrm;
 		}
 
 		const int meshFace = pMesh->mNumFaces;
@@ -92,7 +122,12 @@ bool cModelData::load(cstr filepath) {
 		pGrpItr->mIdxOffset = static_cast<uint32_t>((pIdxGrpStart - pIdx.get()) * sizeof(pIdxGrpStart[0]));
 		pGrpItr->mPolyType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-		*pNamesItr = pMesh->mName.C_Str();
+		if (mi.mName.starts_with("g ")) {
+			*pNamesItr = &mi.mName.p[2];
+		} else {
+			*pNamesItr = mi.mName;
+		}
+		
 
 		++pGrpItr;
 		++pNamesItr;
@@ -126,7 +161,8 @@ bool cModel::init(cModelData const& mdlData) {
 
 	D3D11_INPUT_ELEMENT_DESC vdsc[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, nrm), D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, nrm), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(sModelVtx, uv), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	auto pDev = get_gfx().get_dev();
 	auto& code = mpVS->get_code();
@@ -165,6 +201,12 @@ void cModel::disp() {
 	auto grpNum = mpData->mGrpNum;
 	for (uint32_t i = 0; i < grpNum; ++i) {
 		sGroup const& grp = mpData->mpGroups[i];
+		sGroupMaterial const& mtl = mpGrpMtl[i];
+
+		if (mtl.mpTexBase && mtl.mpSmpBase) {
+			mtl.mpTexBase->set_PS(pCtx, 0);
+			pCtx->PSSetSamplers(0, 1, &mtl.mpSmpBase);
+		}
 
 		mpData->mVtx.set(pCtx, 0, grp.mVtxOffset);
 		mpData->mIdx.set(pCtx, grp.mIdxOffset);

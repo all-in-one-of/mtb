@@ -12,4 +12,5 @@ void main(sVSModelSolid vin, out sPSModel vout)
 	vout.cpos = cpos;
 	vout.wpos = wpos;
 	vout.wnrm = wnrm;
+	vout.uv = vin.uv;
 }

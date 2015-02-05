@@ -9,10 +9,13 @@ struct CTX {
 	float4 cpos;
 	float4 wpos;
 	float3 wnrm;
+	float2 uv;
+	float3 base;
 	float3 diff;
 	float3 spec;
 	float  alpha;
 	float3 clr;
+	
 
 	sLightCtx lctx;
 };
@@ -29,11 +32,14 @@ CTX set_ctx(sPSModel pin) {
 	ctx.cpos = pin.cpos;
 	ctx.wpos = pin.wpos;
 	ctx.wnrm = normalize(pin.wnrm);
+	ctx.uv   = pin.uv;
 	//ctx.nrm = pin.nrm;
+	ctx.base = float3(1, 1, 1);
 	ctx.diff = float3(0, 0, 0);
 	ctx.spec = float3(0, 0, 0);
 	ctx.alpha = 1.0;
 	ctx.clr = float3(0, 0, 0);
+	
 	ctx.lctx = set_light_ctx();
 	return ctx;
 }
@@ -54,7 +60,17 @@ CTX shade(CTX ctx) {
 	return ctx;
 }
 
+CTX noshade(CTX ctx) {
+	ctx.diff = float3(1, 1, 1);
+	return ctx;
+}
 
+
+
+CTX sample_base(CTX ctx) {
+	ctx.base = g_meshDiffTex.Sample(g_meshDiffSmp, ctx.uv).rgb;
+	return ctx;
+}
 
 float4 main(sPSModel pin) : SV_TARGET
 {
@@ -66,10 +82,12 @@ float4 main(sPSModel pin) : SV_TARGET
 	//clr.rgb = rgb;
 	//clr.a = pin.clr.a;
 
-	ctx = shade(ctx);
-
-	ctx.clr = ctx.diff + ctx.spec;
+	ctx = sample_base(ctx);
+	ctx = noshade(ctx);
+	
+	ctx.clr = ctx.base * ctx.diff + ctx.spec;
 	//ctx.clr = ctx.wnrm;
+
 
 	return float4(ctx.clr, ctx.alpha);
 }
