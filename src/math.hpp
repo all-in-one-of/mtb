@@ -53,6 +53,11 @@ struct tvec2 {
 		y *= s;
 		return *this;
 	}
+	tvec2& operator/(T s) {
+		x /= s;
+		y /= s;
+		return *this;
+	}
 	
 	friend tvec2 operator+(tvec2 const& a, tvec2 const& b) {
 		tvec2 res(a);
@@ -64,6 +69,12 @@ struct tvec2 {
 		tvec2 res(a);
 		res.x -= b.x;
 		res.y -= b.y;
+		return res;
+	}
+	friend tvec2 operator*(tvec2 const& a, tvec2 const& b) {
+		tvec2 res(a);
+		res.x *= b.x;
+		res.y *= b.y;
 		return res;
 	}
 	friend tvec2 operator/(tvec2 const& a, tvec2 const& b) {

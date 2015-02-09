@@ -258,7 +258,8 @@ void loop() {
 	SDL_Event ev;
 	auto& inputMgr = get_input_mgr();
 	while (!quit) {
-		inputMgr.update();
+		Uint32 ticks = SDL_GetTicks();
+		inputMgr.preupdate();
 
 		while (SDL_PollEvent(&ev)) {
 			switch (ev.type) {
@@ -275,11 +276,19 @@ void loop() {
 			}
 		}
 
+		inputMgr.update();
+
 		if (!quit) {
 			do_frame();
 		} else {
 			//obj.deinit();
 			gnomon.deinit();
+		}
+
+		Uint32 now = SDL_GetTicks();
+		Uint32 spent = now - ticks;
+		if (spent < 16) {
+			SDL_Delay(16 - spent);
 		}
 	}
 }
@@ -295,7 +304,7 @@ int main(int argc, char* argv[]) {
 	auto smps = globals.samplerStates.ctor_scoped(get_gfx().get_dev());
 	auto cam = globals.camera.ctor_scoped();
 
-	trackballCam.init();
+	trackballCam.init(get_camera());
 
 	lightning.init();
 

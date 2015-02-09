@@ -47,7 +47,8 @@ bool cModelData::load(cstr filepath) {
 		return false;
 	}
 	
-	std::vector<sAIMeshInfo> meshes(pScene->mNumMeshes);
+	std::vector<sAIMeshInfo> meshes;
+	meshes.reserve(pScene->mNumMeshes);
 	list_meshes(pScene->mRootNode, meshes, pScene);
 
 	int numVtx = 0;

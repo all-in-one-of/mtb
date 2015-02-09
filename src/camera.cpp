@@ -20,8 +20,8 @@ void cCamera::sView::calc_viewProj() {
 
 void cCamera::set_default() {
 	//mPos = dx::XMVectorSet(1.0f, 2.0f, 3.0f, 1.0f);
-	mPos = dx::XMVectorSet(0.0f, 0.3f, 1.0f, 1.0f);
-	mTgt = dx::XMVectorSet(0.0f, 0.3f, 0.0f, 1.0f);
+	mPos = dx::XMVectorSet(0.5f, 0.1f, 1.0f, 1.0f);
+	mTgt = dx::XMVectorSet(0.0f, 0.1f, 0.0f, 1.0f);
 	mUp = dx::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
 
@@ -42,8 +42,6 @@ void cCamera::recalc() {
 
 extern vec2i get_window_size();
 void cTrackball::update(vec2i pos, vec2i prev, float r) {
-	r = 0.5;
-
 	vec2f fpos = pos;
 	vec2f fprev = prev;
 	vec2f size = get_window_size();
@@ -69,38 +67,32 @@ dx::XMVECTOR project_sphere_hyphsheet(vec2f p, float r) {
 	} else {
 		z = rr2 / ::sqrtf(sq);
 	}
-	
-	//dbg_msg("%f %f %f %d\n", p.x, p.y, z, (int)onSp);
 
 	return dx::XMVectorSet(p.x, p.y, z, 0.0f);
 }
 
 void cTrackball::update(vec2f pos, vec2f prev, float r) {
-	auto v2 = project_sphere_hyphsheet(pos, r);
-	auto v1 = project_sphere_hyphsheet(prev, r);
+	auto p0 = project_sphere_hyphsheet(prev, r);
+	auto p1 = project_sphere_hyphsheet(pos, r);
 	
-	auto dir = dx::XMVectorSubtract(v1, v2);
-	auto axis = dx::XMVector3Cross(v2, v1);
+	auto dir = dx::XMVectorSubtract(p0, p1);
+	auto axis = dx::XMVector3Cross(p1, p0);
 
 	float t = dx::XMVectorGetX(dx::XMVector4Length(dir)) / (2.0f * r);
-	//t = clamp(t, -1.0f, 1.0f);
+	t = clamp(t, -1.0f, 1.0f);
 	float angle = 2.0f * ::asinf(t);
 
 	auto spin = dx::XMQuaternionRotationAxis(axis, angle);
-	auto quat = dx::XMQuaternionMultiply(mQuat, spin);
+	auto quat = dx::XMQuaternionMultiply(spin, mQuat);
 	mQuat = dx::XMQuaternionNormalize(quat);
 	mSpin = spin;
-}
-
-void cTrackball::apply(cCamera& cam) {
-	auto dir = dx::XMVectorSubtract(cam.mPos, cam.mTgt);
-	dir = dx::XMVector3Rotate(dir, mSpin);
-	cam.mPos = dx::XMVectorAdd(cam.mTgt, dir);
 }
 
 void cTrackball::apply(cCamera& cam, DirectX::XMVECTOR dir) {
 	dir = dx::XMVector3Rotate(dir, mQuat);
 	cam.mPos = dx::XMVectorAdd(cam.mTgt, dir);
+
+	cam.mUp = dx::XMVector3Rotate(dx::g_XMIdentityR1, mQuat);
 }
 
 void cTrackball::set_home() {
@@ -118,17 +110,29 @@ void cTrackballCam::update(cCamera& cam) {
 	}
 }
 
+void cTrackballCam::init(cCamera& cam) {
+	auto dir = dx::XMVectorSubtract(cam.mPos, cam.mTgt);
+	auto angle = dx::XMVector3AngleBetweenVectors(dir, dx::g_XMIdentityR2);
+	auto a = dx::XMVectorGetX(angle);
+	tb.mQuat = dx::XMQuaternionRotationAxis(cam.mUp, a);
+}
+
 bool cTrackballCam::update_trackball(cCamera& cam) {
 	auto& input = get_input_mgr();
-	const auto btn = cInputMgr::EMBMIDDLE;
+	//const auto btn = cInputMgr::EMBMIDDLE;
+	const auto btn = cInputMgr::EMBLEFT;
 	if (!input.mbtn_state(btn)) return false;
-	auto pos = input.mMousePos;
-	//auto prev = input.mMousePosStart[btn];
+	auto now = input.mMousePos;
 	auto prev = input.mMousePosPrev;
-	if (pos == prev) return false;
+	if (now == prev) return false;
 
-	tb.update(pos, prev);
-	tb.apply(cam);
+	tb.update(now, prev);
+
+	auto dir = dx::XMVectorSubtract(cam.mPos, cam.mTgt);
+	float dist = dx::XMVectorGetX(dx::XMVector4Length(dir));
+	dir = dx::XMVectorScale(dx::g_XMIdentityR2, dist);
+
+	tb.apply(cam, dir);
 	return true;
 }
 
@@ -160,8 +164,8 @@ bool cTrackballCam::update_distance(cCamera& cam) {
 
 bool cTrackballCam::update_translation(cCamera& cam) {
 	auto& input = get_input_mgr();
-	//const auto btn = cInputMgr::EMBMIDDLE;
-	const auto btn = cInputMgr::EMBLEFT;
+	const auto btn = cInputMgr::EMBMIDDLE;
+	//const auto btn = cInputMgr::EMBLEFT;
 	if (!input.mbtn_holded(btn)) return false;
 
 	auto pos = input.mMousePos;

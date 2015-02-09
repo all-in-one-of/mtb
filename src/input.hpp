@@ -24,6 +24,7 @@ public:
 	void on_mouse_button(SDL_MouseButtonEvent const& ev);
 	void on_mouse_motion(SDL_MouseMotionEvent const& ev);
 
+	void preupdate();
 	void update();
 
 	bool mbtn_pressed(eMouseBtn btn) const { return mMouseBtn[btn] && !mMouseBtnPrev[btn]; }

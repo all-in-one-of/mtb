@@ -26,16 +26,20 @@ void cInputMgr::on_mouse_button(SDL_MouseButtonEvent const& ev) {
 	//dbg_msg("%d %d %d\n", ev.type, ev.state, ev.clicks);
 }
 
+void cInputMgr::preupdate() {
+	mMousePosPrev = mMousePos;
+	mMouseBtnPrev = mMouseBtn;
+}
+
 void cInputMgr::update() {
 	for (int i = 0; i < EMBLAST; ++i) {
 		if (mbtn_pressed((eMouseBtn)i)) {
 			mMousePosStart[i] = mMousePos;
 		}
 	}
-	
-	mMousePosPrev = mMousePos;
-	mMouseBtnPrev = mMouseBtn;
-	
-	//if (mMouseBtn[EMBLEFT])
-	//	dbg_msg("%d %d\n", mMousePos.x, mMousePos.y);
+		
+	//if (mMouseBtn[EMBLEFT]) {
+	//	dbg_msg("%d %d %d %d\n", mMousePos.x, mMousePos.y, 
+	//		mMousePosStart[EMBLEFT].x, mMousePosStart[EMBLEFT].y);
+	//}
 }
