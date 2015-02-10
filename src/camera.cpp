@@ -3,6 +3,8 @@
 #include "common.hpp"
 #include "input.hpp"
 
+#include <SDL_keycode.h>
+
 namespace dx = DirectX;
 
 void cCamera::sView::calc_view(dx::XMVECTOR const& pos, dx::XMVECTOR const& tgt, dx::XMVECTOR const& up) {
@@ -101,6 +103,13 @@ void cTrackball::set_home() {
 }
 
 void cTrackballCam::update(cCamera& cam) {
+	auto& input = get_input_mgr();
+	if (input.kbtn_pressed(SDL_SCANCODE_F1)) {
+		mCatchInput = !mCatchInput;
+	}
+	if (!mCatchInput && !input.kbtn_state(SDL_SCANCODE_SPACE)) {
+		return;
+	}
 	bool updated = false;
 	updated = updated || update_trackball(cam);
 	updated = updated || update_distance(cam);
@@ -139,7 +148,7 @@ bool cTrackballCam::update_trackball(cCamera& cam) {
 bool cTrackballCam::update_distance(cCamera& cam) {
 	auto& input = get_input_mgr();
 	const auto btn = cInputMgr::EMBRIGHT;
-	if (!input.mbtn_holded(btn)) return false;
+	if (!input.mbtn_held(btn)) return false;
 
 	auto pos = input.mMousePos;
 	auto prev = input.mMousePosPrev;
@@ -166,7 +175,7 @@ bool cTrackballCam::update_translation(cCamera& cam) {
 	auto& input = get_input_mgr();
 	const auto btn = cInputMgr::EMBMIDDLE;
 	//const auto btn = cInputMgr::EMBLEFT;
-	if (!input.mbtn_holded(btn)) return false;
+	if (!input.mbtn_held(btn)) return false;
 
 	auto pos = input.mMousePos;
 	auto prev = input.mMousePosPrev;

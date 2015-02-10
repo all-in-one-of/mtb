@@ -49,9 +49,9 @@ public:
 
 class cTrackballCam {
 	cTrackball tb;
+	bool mCatchInput = false;
 public:
 	void init(cCamera& cam);
-
 	void update(cCamera& cam);
 protected:
 	bool update_trackball(cCamera& cam);

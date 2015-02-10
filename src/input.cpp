@@ -4,6 +4,8 @@
 
 #include <SDL_events.h>
 
+static_assert(SDL_NUM_SCANCODES == cInputMgr::KEYS_COUNT, "SDL_NUM_SCANCODES != cInputMgr::KEYS_COUNT");
+
 void cInputMgr::on_mouse_motion(SDL_MouseMotionEvent const& ev) {
 	mMousePos = { ev.x, ev.y };
 }
@@ -29,6 +31,8 @@ void cInputMgr::on_mouse_button(SDL_MouseButtonEvent const& ev) {
 void cInputMgr::preupdate() {
 	mMousePosPrev = mMousePos;
 	mMouseBtnPrev = mMouseBtn;
+	mKeysPrev = mKeys;
+	mKModPrev = mKMod;
 }
 
 void cInputMgr::update() {
@@ -42,4 +46,13 @@ void cInputMgr::update() {
 	//	dbg_msg("%d %d %d %d\n", mMousePos.x, mMousePos.y, 
 	//		mMousePosStart[EMBLEFT].x, mMousePosStart[EMBLEFT].y);
 	//}
+
+	int numkeys = 0;
+	auto keys = SDL_GetKeyboardState(&numkeys);
+	int keysCount = std::min(numkeys, (int)mKeys.size());
+	for (int i = 0; i < keysCount; ++i) {
+		mKeys[i] = !!keys[i];
+	}
+
+	mKMod = SDL_GetModState();
 }

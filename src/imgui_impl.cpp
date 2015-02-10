@@ -4,8 +4,11 @@
 #include "rdr.hpp"
 #include "imgui_impl.hpp"
 #include "gfx.hpp"
+#include "input.hpp"
 
 #include <imgui.h>
+
+#include <SDL_keycode.h>
 
 static char const* const g_vtxShader = 
 "cbuffer Cam : register(c0) {"
@@ -57,23 +60,23 @@ cImgui::cImgui(cGfx& gfx) {
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize = ImVec2(winSize.x, winSize.y);
 	io.DeltaTime = 1.0f / 60.0f;
-	io.KeyMap[ImGuiKey_Tab] = VK_TAB;
-	io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
-	io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
-	io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
-	io.KeyMap[ImGuiKey_DownArrow] = VK_UP;
-	io.KeyMap[ImGuiKey_Home] = VK_HOME;
-	io.KeyMap[ImGuiKey_End] = VK_END;
-	io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
-	io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
-	io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
-	io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
-	io.KeyMap[ImGuiKey_A] = 'A';
-	io.KeyMap[ImGuiKey_C] = 'C';
-	io.KeyMap[ImGuiKey_V] = 'V';
-	io.KeyMap[ImGuiKey_X] = 'X';
-	io.KeyMap[ImGuiKey_Y] = 'Y';
-	io.KeyMap[ImGuiKey_Z] = 'Z';
+	io.KeyMap[ImGuiKey_Tab] = SDL_SCANCODE_TAB;
+	io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
+	io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
+	io.KeyMap[ImGuiKey_UpArrow] = SDL_SCANCODE_UP;
+	io.KeyMap[ImGuiKey_DownArrow] = SDL_SCANCODE_UP;
+	io.KeyMap[ImGuiKey_Home] = SDL_SCANCODE_HOME;
+	io.KeyMap[ImGuiKey_End] = SDL_SCANCODE_END;
+	io.KeyMap[ImGuiKey_Delete] = SDL_SCANCODE_DELETE;
+	io.KeyMap[ImGuiKey_Backspace] = SDL_SCANCODE_BACKSPACE;
+	io.KeyMap[ImGuiKey_Enter] = SDL_SCANCODE_RETURN;
+	io.KeyMap[ImGuiKey_Escape] = SDL_SCANCODE_ESCAPE;
+	io.KeyMap[ImGuiKey_A] = SDL_SCANCODE_A;
+	io.KeyMap[ImGuiKey_C] = SDL_SCANCODE_C;
+	io.KeyMap[ImGuiKey_V] = SDL_SCANCODE_V;
+	io.KeyMap[ImGuiKey_X] = SDL_SCANCODE_X;
+	io.KeyMap[ImGuiKey_Y] = SDL_SCANCODE_Y;
+	io.KeyMap[ImGuiKey_Z] = SDL_SCANCODE_Z;
 	io.RenderDrawListsFn = render_callback_st;
 
 	mVtx.init_write_only(pDev, 10000, sizeof(sImguiVtx));
@@ -111,8 +114,25 @@ cImgui::~cImgui() {
 	ImGui::Shutdown();
 }
 
+static ImVec2 as_ImVec2(vec2i v) {
+	return ImVec2(v.x, v.y);
+}
+
 void cImgui::update() {
 	ImGuiIO& io = ImGui::GetIO();
+
+	auto& input = get_input_mgr();
+
+	io.MousePos = as_ImVec2(input.mMousePos);
+	for (int i = 0; i < cInputMgr::EMBLAST && i < SIZEOF_ARRAY(io.MouseDown); ++i) {
+		io.MouseDown[i] = input.mbtn_state((cInputMgr::eMouseBtn)i);
+	}
+
+	for (int i = 0; i < cInputMgr::KEYS_COUNT && i < SIZEOF_ARRAY(io.KeysDown); ++i) {
+		io.KeysDown[i] = input.kbtn_state(i);
+	}
+	io.KeyCtrl = input.kmod_state(KMOD_CTRL);
+	io.KeyShift = input.kmod_state(KMOD_SHIFT);
 
 	ImGui::NewFrame();
 }
