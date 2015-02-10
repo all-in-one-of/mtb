@@ -235,6 +235,12 @@ public:
 		mModel.init(mMdlData);
 
 		mModel.mpGrpMtl = std::make_unique<sGroupMaterial[]>(mMdlData.mGrpNum);
+
+		auto& cbs = cConstBufStorage::get();
+		cbs.mTestMtlCBuf.mData.fresnel[0] = 1.0f;
+		cbs.mTestMtlCBuf.mData.fresnel[1] = 1.0f;
+		cbs.mTestMtlCBuf.mData.fresnel[2] = 1.0f;
+		cbs.mTestMtlCBuf.mData.shin[0] = 100.0f;
 	}
 
 	void deinit() {
@@ -243,6 +249,18 @@ public:
 	}
 
 	void disp() {
+		ImGui::Text("Hello, world!");
+
+		auto& cbs = cConstBufStorage::get();
+
+		ImGui::SliderFloat3("fresnel", cbs.mTestMtlCBuf.mData.fresnel, 0.0f, 1.0f);
+		//ImGui::SliderFloat("fresnel", cbs.mTestMtlCBuf.mData.fresnel, 0.0f, 1.0f);
+		ImGui::SliderFloat("shin", cbs.mTestMtlCBuf.mData.shin, 0.0f, 1000.0f);
+
+		cbs.mTestMtlCBuf.update(get_gfx().get_ctx());
+		cbs.mTestMtlCBuf.set_PS(get_gfx().get_ctx());
+
+
 		mModel.disp();
 	}
 };
@@ -287,8 +305,6 @@ void do_frame() {
 
 	gnomon.exec();
 	gnomon.disp();
-
-	ImGui::Text("Hello, world!");
 
 	cImgui::get().disp();
 	gfx.end_frame();

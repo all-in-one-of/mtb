@@ -115,7 +115,8 @@ cImgui::~cImgui() {
 }
 
 static ImVec2 as_ImVec2(vec2i v) {
-	return ImVec2(v.x, v.y);
+	vec2f f = v;
+	return ImVec2(f.x, f.y);
 }
 
 void cImgui::update() {

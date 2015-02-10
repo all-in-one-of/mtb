@@ -36,5 +36,16 @@ cbuffer Mesh : register(b1) {
 	float4x4 g_world;
 };
 
+cbuffer TestMtl : register(b2) {
+	float4 g_fresnel;
+	float g_shin;
+
+	float3 _g_tmpasdasdfaffsdasdfsf;
+}
+
 Texture2D g_meshDiffTex : register(t0);
 SamplerState g_meshDiffSmp : register(s0);
+
+static const float g_gamma = 2.2;
+
+#define PI 3.14159265

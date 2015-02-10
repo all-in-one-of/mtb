@@ -1,8 +1,9 @@
 #include "shader.hlsli"
 
 struct sLightCtx {
-	float3 El;
-	float3 l;
+	float3 lpos;
+	float3 ldir;
+	float3 lclr;
 };
 
 struct CTX {
@@ -22,8 +23,8 @@ struct CTX {
 
 sLightCtx set_light_ctx() {
 	sLightCtx lc = (sLightCtx)0;
-	lc.El = float3(1, 1, 1);
-	lc.l = -float3(0, -1, -1);
+	lc.ldir = -float3(0, 0, -1);
+	lc.lclr = float3(1, 1, 1) * 1.0;
 	return lc;
 }
 
@@ -44,18 +45,47 @@ CTX set_ctx(sPSModel pin) {
 	return ctx;
 }
 
+float3 fresnel(float3 f0, float HL) {
+	return f0 + (1 - f0) * pow(1 - HL, 5);
+}
 
+float3 lambert_brdf(float3 c) {
+	//return c / PI;
+	return c;
+}
+
+float3 phong_brdf(float3 c, float RV, float shin) {
+	return c * pow(RV, shin);
+}
+
+float3 blinn_phong_brdf(float3 c, float HN, float shin) {
+	return c * pow(HN, shin);
+}
 
 CTX shade(CTX ctx) {
-	float3 dir = normalize(ctx.wpos - g_camPos).xyz;
-	float3 h = normalize(dir + ctx.lctx.l);
-	float cosTh = saturate(dot(ctx.wnrm, h));
-	float cosTi = saturate(dot(ctx.wnrm, ctx.lctx.l));
+	float3 N = ctx.wnrm;
+	float3 L = ctx.lctx.ldir;
+	float3 R = reflect(-L, N);
+	float LN = saturate(dot(L, N));
 
-	float3 kd = { 0, 0, 0 };
-	float3 ks = { 1, 1, 1 };
-	float m = 2;
-	ctx.diff += (kd + ks * pow(cosTh, m)) * ctx.lctx.El * cosTi;
+	float3 V = normalize(g_camPos - ctx.wpos).xyz;
+	float3 H = normalize(V + L);
+		
+	float HN = saturate(dot(H, N));
+	float HV = saturate(dot(H, V));
+	float HL = saturate(dot(H, L));
+	float RV = saturate(dot(R, V));
+
+	float shin = g_shin;
+	float3 f0 = g_fresnel.xyz;
+	//float3 f0 = g_fresnel.xxx;
+
+	ctx.diff += lambert_brdf(ctx.lctx.lclr) * LN;
+	//ctx.spec += /*ctx.lctx.lclr * pow(max(0.001, HN), shin) * */fresnel(F0, HV)/* * LN*/;
+	//ctx.spec = fresnel(f0, HL) * LN;
+	//ctx.spec = V;
+	//ctx.spec = phong_brdf(ctx.lctx.lclr, RV, shin) * LN;
+	ctx.spec = blinn_phong_brdf(ctx.lctx.lclr, HN, shin) * fresnel(f0, HL) * LN;
 
 	return ctx;
 }
@@ -65,29 +95,27 @@ CTX noshade(CTX ctx) {
 	return ctx;
 }
 
+float4 combine(CTX ctx){
+	ctx.clr = ctx.base * ctx.diff + ctx.spec;
+	//ctx.clr = ctx.spec;
 
+	ctx.clr = pow(ctx.clr, 1.0 / g_gamma);
+
+	return float4(ctx.clr, ctx.alpha);
+}
 
 CTX sample_base(CTX ctx) {
-	ctx.base = g_meshDiffTex.Sample(g_meshDiffSmp, ctx.uv).rgb;
+	//ctx.base = g_meshDiffTex.Sample(g_meshDiffSmp, ctx.uv).rgb;
+	//ctx.base = float3(1.0, 1.0, 1.0);
+	ctx.base = float3(1.0, 1.0, 1.0);
 	return ctx;
 }
 
 float4 main(sPSModel pin) : SV_TARGET
 {
 	CTX ctx = set_ctx(pin);
-	//float4 clr = float4(1.0f, 1.0f, 1.0f, 1.0f);
-	//clr = float4(pin.nrm, 1);
-	//float3 rgb = pin.clr.rgb;
-	//rgb = rgb * 0.55 + 0.225;
-	//clr.rgb = rgb;
-	//clr.a = pin.clr.a;
-
 	ctx = sample_base(ctx);
-	ctx = noshade(ctx);
-	
-	ctx.clr = ctx.base * ctx.diff + ctx.spec;
-	//ctx.clr = ctx.wnrm;
-
-
-	return float4(ctx.clr, ctx.alpha);
+	ctx = shade(ctx);
+	float4 clr = combine(ctx);
+	return clr;
 }

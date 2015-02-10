@@ -22,6 +22,13 @@ struct sImguiCameraCBuf {
 	DirectX::XMMATRIX proj;
 };
 
+struct sTestMtlCBuf {
+	float fresnel[4];
+	float shin[1];
+
+	float _tmp[3];
+};
+
 class cBufferBase : noncopyable {
 protected:
 	com_ptr<ID3D11Buffer> mpBuf;
@@ -148,11 +155,13 @@ public:
 	cConstBufferSlotted<sCameraCBuf, 0> mCameraCBuf;
 	cConstBufferSlotted<sMeshCBuf, 1> mMeshCBuf;
 	cConstBufferSlotted<sImguiCameraCBuf, 0> mImguiCameraCBuf;
+	cConstBufferSlotted<sTestMtlCBuf, 2> mTestMtlCBuf;
 
 	cConstBufStorage(ID3D11Device* pDev) {
 		mCameraCBuf.init(pDev);
 		mMeshCBuf.init(pDev);
 		mImguiCameraCBuf.init(pDev);
+		mTestMtlCBuf.init(pDev);
 	}
 
 	static cConstBufStorage& get();
