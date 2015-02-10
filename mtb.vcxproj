@@ -98,13 +98,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\code\SDL2-2.0.3\VisualC\SDL\x64\Release;D:\code\SDL2-2.0.3\VisualC\SDLmain\x64\Release;$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;SDL2.lib;SDL2main.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;D3DCompiler.lib;SDL2.lib;SDL2main.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -115,13 +115,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\code\SDL2-2.0.3\VisualC\SDL\x64\Release;D:\code\SDL2-2.0.3\VisualC\SDLmain\x64\Release;$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;SDL2.lib;SDL2main.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;D3DCompiler.lib;SDL2.lib;SDL2main.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
       <Command>
@@ -142,7 +142,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -150,7 +150,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>D:\code\SDL2-2.0.3\VisualC\SDL\x64\Release;D:\code\SDL2-2.0.3\VisualC\SDLmain\x64\Release;$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;SDL2.lib;SDL2main.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;D3DCompiler.lib;SDL2.lib;SDL2main.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -163,7 +163,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -171,13 +171,14 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>D:\code\SDL2-2.0.3\VisualC\SDL\x64\Release;D:\code\SDL2-2.0.3\VisualC\SDLmain\x64\Release;$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;SDL2.lib;SDL2main.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;D3DCompiler.lib;SDL2.lib;SDL2main.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\common.cpp" />
     <ClCompile Include="src\gfx.cpp" />
+    <ClCompile Include="src\imgui_impl.cpp" />
     <ClCompile Include="src\input.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\model.cpp" />
@@ -186,6 +187,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\camera.hpp" />
+    <ClInclude Include="src\imgui_impl.hpp" />
     <ClInclude Include="src\input.hpp" />
     <ClInclude Include="src\math.hpp" />
     <ClInclude Include="src\model.hpp" />
@@ -204,6 +206,10 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/Fc $(OutDir)%(Filename).cso.lst %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Fc $(OutDir)%(Filename).cso.lst %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/Fc $(OutDir)%(Filename).cso.lst %(AdditionalOptions)</AdditionalOptions>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="hlsl\model_solid.vs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
@@ -244,6 +250,9 @@
   <ItemGroup>
     <ProjectReference Include="3rd_party\DirectXTK\DirectXTK_Desktop_2013.vcxproj">
       <Project>{e0b52ae7-e160-4d32-bf3f-910b785e5a8e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="3rd_party\imgui\imgui_lib_vs2013.vcxproj">
+      <Project>{851be1c7-b9c2-45bc-b172-df7641f05e8a}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

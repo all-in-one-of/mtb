@@ -1,0 +1,205 @@
+#include "math.hpp"
+#include "common.hpp"
+#include "texture.hpp"
+#include "rdr.hpp"
+#include "imgui_impl.hpp"
+#include "gfx.hpp"
+
+#include <imgui.h>
+
+static char const* const g_vtxShader = 
+"cbuffer Cam : register(c0) {"
+"    row_major float4x4 g_MVP; "
+"};"
+"struct sVtx {"
+"    float2 pos : POSITION;"
+"    float2 uv  : TEXCOORD;"
+"    float4 clr : COLOR;"
+"};"
+"struct sPix {"
+"    float4 pos : SV_POSITION;"
+"    float4 clr : COLOR0;"
+"    float2 uv  : TEXCOORD;"
+"};"
+"sPix main(sVtx input) {"
+"    sPix output;"
+"    output.pos = mul(float4(input.pos.xy, 0.f, 1.f), g_MVP);"
+"    output.clr = input.clr;"
+"    output.uv  = input.uv;"
+"    return output;"
+"}";
+
+static char const* const g_pixShader =
+"struct sPix {"
+"    float4 pos : SV_POSITION;"
+"    float4 clr : COLOR0;"
+"    float2 uv  : TEXCOORD;"
+"};"
+"sampler g_smp : register(s0);"
+"Texture2D g_tex : register(t0);"
+"float4 main(sPix input) : SV_Target {"
+"    float4 out_col = input.clr * g_tex.Sample(g_smp, input.uv);"
+"    return out_col;"
+"}";
+
+
+struct sImguiVtx {
+	vec2f    pos;
+	vec2f    uv;
+	uint32_t clr;
+};
+
+
+cImgui::cImgui(cGfx& gfx) {
+	auto pDev = gfx.get_dev();
+	vec2f winSize = get_window_size();
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.DisplaySize = ImVec2(winSize.x, winSize.y);
+	io.DeltaTime = 1.0f / 60.0f;
+	io.KeyMap[ImGuiKey_Tab] = VK_TAB;
+	io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
+	io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
+	io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
+	io.KeyMap[ImGuiKey_DownArrow] = VK_UP;
+	io.KeyMap[ImGuiKey_Home] = VK_HOME;
+	io.KeyMap[ImGuiKey_End] = VK_END;
+	io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
+	io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
+	io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
+	io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
+	io.KeyMap[ImGuiKey_A] = 'A';
+	io.KeyMap[ImGuiKey_C] = 'C';
+	io.KeyMap[ImGuiKey_V] = 'V';
+	io.KeyMap[ImGuiKey_X] = 'X';
+	io.KeyMap[ImGuiKey_Y] = 'Y';
+	io.KeyMap[ImGuiKey_Z] = 'Z';
+	io.RenderDrawListsFn = render_callback_st;
+
+	mVtx.init_write_only(pDev, 10000, sizeof(sImguiVtx));
+
+	auto& ss = get_shader_storage();
+	mpVS = ss.create_VS(g_vtxShader);
+	mpPS = ss.create_PS(g_pixShader);
+
+	D3D11_INPUT_ELEMENT_DESC vdsc[] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(sImguiVtx, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(sImguiVtx, uv), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, offsetof(sImguiVtx, clr), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	auto& code = mpVS->get_code();
+	HRESULT hr = pDev->CreateInputLayout(vdsc, SIZEOF_ARRAY(vdsc), code.get_code(), code.get_size(), &mpIL);
+	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
+
+	load_fonts();
+}
+
+void cImgui::load_fonts() {
+	ImGuiIO& io = ImGui::GetIO();
+
+	unsigned char* pixels;
+	int width, height;
+	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
+
+	if (mFontTex.create2d1_rgba8(get_gfx().get_dev(), pixels, width, height)) {
+		io.Fonts->TexID = (void*)&mFontTex;
+	}
+}
+
+cImgui::~cImgui() {
+	ImGui::Shutdown();
+}
+
+void cImgui::update() {
+	ImGuiIO& io = ImGui::GetIO();
+
+	ImGui::NewFrame();
+}
+
+void cImgui::disp() {
+	ImGui::Render();
+}
+
+void cImgui::render_callback_st(ImDrawList** const draw_lists, int count) {
+	get().render_callback(draw_lists, count);
+}
+
+static DirectX::XMMATRIX calc_imgui_ortho(ImGuiIO& io) {
+	const float L = 0.0f;
+	const float R = io.DisplaySize.x;
+	const float B = io.DisplaySize.y;
+	const float T = 0.0f;
+	const float mvp[4][4] =
+	{
+		{ 2.0f / (R - L), 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 2.0f / (T - B), 0.0f, 0.0f, },
+		{ 0.0f, 0.0f, 0.5f, 0.0f },
+		{ (R + L) / (L - R), (T + B) / (B - T), 0.5f, 1.0f },
+	};
+	return DirectX::XMMATRIX(&mvp[0][0]);
+	//return DirectX::XMMatrixOrthographicRH(io.DisplaySize.x, io.DisplaySize.y, 0.0f, 1.0f);
+}
+
+void cImgui::render_callback(ImDrawList** const drawLists, int count) {
+	ImGuiIO& io = ImGui::GetIO();
+	auto& gfx = get_gfx();
+	auto pCtx = gfx.get_ctx();
+
+	{
+		auto vm = mVtx.map(pCtx);
+		if (!vm.is_mapped())
+			return;
+
+		sImguiVtx* pVtx = reinterpret_cast<sImguiVtx*>(vm.data());
+		for (int i = 0; i < count; ++i) {
+			ImDrawList const* list = drawLists[i];
+			ImDrawVert const* imvtx = &list->vtx_buffer[0];
+			static_assert(sizeof(sImguiVtx) == sizeof(imvtx[0]), "Vertices sizes differ");
+
+			size_t vtxCount = list->vtx_buffer.size();
+			::memcpy(pVtx, imvtx, vtxCount * sizeof(pVtx[0]));
+			pVtx += vtxCount;
+		}
+	}
+
+	auto& cb = cConstBufStorage::get().mImguiCameraCBuf;
+	cb.mData.proj = calc_imgui_ortho(io);
+	cb.update(pCtx);
+	cb.set_VS(pCtx);
+
+	cRasterizerStates::get().set_imgui(pCtx);
+	cBlendStates::get().set_imgui(pCtx);
+	cDepthStencilStates::get().set_imgui(pCtx);
+
+	pCtx->IASetInputLayout(mpIL);
+	pCtx->VSSetShader(mpVS->asVS(), nullptr, 0);
+	pCtx->PSSetShader(mpPS->asPS(), nullptr, 0);
+
+	auto smp = cSamplerStates::get().linear();
+	pCtx->PSSetSamplers(0, 1, &smp);
+
+	pCtx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mVtx.set(pCtx, 0, 0);
+
+	int vtxOffset = 0;
+	for (int i = 0; i < count; ++i) {
+		ImDrawList const* list = drawLists[i];
+		for (size_t cmd = 0; cmd < list->commands.size(); ++cmd) {
+			ImDrawCmd const* pCmd = &list->commands[cmd];
+			
+			const D3D11_RECT rect = { 
+				(LONG)pCmd->clip_rect.x, (LONG)pCmd->clip_rect.y,
+				(LONG)pCmd->clip_rect.z, (LONG)pCmd->clip_rect.w };
+			pCtx->RSSetScissorRects(1, &rect);
+
+			cTexture* pTex = reinterpret_cast<cTexture*>(pCmd->texture_id);
+			if (pTex) {
+				pTex->set_PS(pCtx, 0);
+			}
+
+			pCtx->Draw(pCmd->vtx_count, vtxOffset);
+			vtxOffset += pCmd->vtx_count;
+		}
+	}
+}

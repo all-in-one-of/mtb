@@ -50,8 +50,7 @@ public:
 class cTrackballCam {
 	cTrackball tb;
 public:
-	void init() {
-	}
+	void init(cCamera& cam);
 
 	void update(cCamera& cam);
 protected:

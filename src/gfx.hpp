@@ -5,12 +5,10 @@
 class cSDLWindow;
 
 class cGfx : noncopyable {
-	
-
 	struct sDev : noncopyable {
-		moveable_ptr<IDXGISwapChain> mpSwapChain;
-		moveable_ptr<ID3D11Device> mpDev;
-		moveable_ptr<ID3D11DeviceContext> mpImmCtx;
+		com_ptr<IDXGISwapChain> mpSwapChain;
+		com_ptr<ID3D11Device> mpDev;
+		com_ptr<ID3D11DeviceContext> mpImmCtx;
 
 		sDev() {}
 		sDev(DXGI_SWAP_CHAIN_DESC& sd, UINT flags);
@@ -27,84 +25,32 @@ class cGfx : noncopyable {
 		void release() {
 			if (mpSwapChain) {
 				mpSwapChain->SetFullscreenState(FALSE, nullptr);
-				mpSwapChain->Release();
+				mpSwapChain.reset();
 			}
-			if (mpImmCtx) mpImmCtx->Release();
-			if (mpDev) mpDev->Release();
+			mpImmCtx.reset();
+			mpDev.reset();
 		}
 	};
 	struct sRTView : noncopyable {
-		moveable_ptr<ID3D11RenderTargetView> mpRTV;
+		com_ptr<ID3D11RenderTargetView> mpRTV;
 
 		sRTView() {}
 		sRTView(sDev& dev);
-		~sRTView() {
-			Release();
-		}
 		sRTView& operator=(sRTView&& o) {
-			Release();
 			mpRTV = std::move(o.mpRTV);
 			return *this;
-		}
-
-		void Release() {
-			if (mpRTV) mpRTV->Release();
 		}
 	};
 
 	struct sDepthStencilBuffer : noncopyable {
-		moveable_ptr<ID3D11Texture2D> mpTex;
-		moveable_ptr<ID3D11DepthStencilView> mpDSView;
+		com_ptr<ID3D11Texture2D> mpTex;
+		com_ptr<ID3D11DepthStencilView> mpDSView;
 
 		sDepthStencilBuffer() {}
 		sDepthStencilBuffer(sDev& dev, UINT w, UINT h);
-		~sDepthStencilBuffer() {
-			Release();
-		}
 		sDepthStencilBuffer& operator=(sDepthStencilBuffer&& o) {
-			Release();
 			mpTex = std::move(o.mpTex);
 			mpDSView = std::move(o.mpDSView);
-			return *this;
-		}
-
-		void Release() {
-			if (mpTex) {
-				mpTex->Release(); 
-				mpTex.reset();
-			}
-			if (mpDSView) {
-				mpDSView->Release();
-				mpDSView.reset();
-			}
-		}
-	};
-
-	struct sRSState : noncopyable {
-		moveable_ptr<ID3D11RasterizerState> mpRSState;
-
-		sRSState() {}
-		sRSState(sDev& dev);
-		~sRSState() {
-			if (mpRSState) mpRSState->Release();
-		}
-		sRSState(sRSState&& o) : mpRSState(std::move(o.mpRSState)) {}
-		sRSState& operator=(sRSState&& o) {
-			mpRSState = std::move(o.mpRSState);
-			return *this;
-		}
-	};
-
-	struct sDSState : noncopyable {
-		moveable_ptr<ID3D11DepthStencilState> mpDSState;
-		sDSState() {}
-		sDSState(sDev& dev);
-		~sDSState() {
-			if (mpDSState) mpDSState->Release();
-		}
-		sDSState(sDSState&& o) : mpDSState(std::move(o.mpDSState)) {}
-		sDSState& operator=(sDSState&& o) {
-			mpDSState = std::move(o.mpDSState);
 			return *this;
 		}
 	};
@@ -112,7 +58,6 @@ class cGfx : noncopyable {
 	sDev mDev;
 	sRTView mRTV;
 	sDepthStencilBuffer mDS;
-	sRSState mRSState;
 
 public:
 	cGfx(HWND hwnd);
@@ -143,13 +88,10 @@ public:
 };
 
 class cShader  : noncopyable  {
-	moveable_ptr<ID3D11DeviceChild> mpShader;
-	cShaderBytecode                 mCode;
+	com_ptr<ID3D11DeviceChild> mpShader;
+	cShaderBytecode            mCode;
 public:
 	cShader(ID3D11DeviceChild* pShader, cShaderBytecode&& code) : mpShader(pShader), mCode(std::move(code)) {}
-	~cShader() {
-		if (mpShader) mpShader->Release();
-	}
 	cShader(cShader&& o) : mpShader(std::move(o.mpShader)), mCode(std::move(o.mCode)) {}
 	cShader& operator=(cShader&& o) {
 		mpShader = std::move(o.mpShader);
@@ -173,7 +115,13 @@ public:
 	cShader* load_VS(cstr filepath);
 	cShader* load_PS(cstr filepath);
 
+	cShader* create_VS(cstr code);
+	cShader* create_PS(cstr code);
+
 private:
+	cShader* create_VS(cShaderBytecode&& code);
+	cShader* create_PS(cShaderBytecode&& code);
+
 	cShader* put_shader(ID3D11DeviceChild* pShader, cShaderBytecode&& code);
 };
 

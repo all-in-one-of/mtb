@@ -64,6 +64,42 @@ struct moveable_ptr {
 	operator T*() const { return p; }
 
 	void reset() { p = nullptr; }
+	void reset(T* ptr) { p = ptr; }
+};
+
+template <typename T>
+struct com_ptr {
+	T* p;
+	com_ptr(T* p = nullptr) : p(p) {}
+	~com_ptr() { reset(); }
+
+	com_ptr(com_ptr& o) = delete;
+	com_ptr& operator=(com_ptr& o) = delete;
+
+	com_ptr(com_ptr&& o) {
+		reset(o.p);
+		o.p = nullptr; 
+	}
+	com_ptr& operator=(com_ptr&& o) {
+		reset(o.p);
+		o.p = nullptr; 
+		return *this; 
+	}
+
+	T* operator->() const { return p; }
+	T& operator*() const { return *p; }
+
+	T** pp() { return &p; }
+
+	operator T*() const { return p; }
+
+	void reset() { reset(nullptr); }
+	void reset(T* ptr) { 
+		if (p) {
+			p->Release();
+		}
+		p = ptr;
+	}
 };
 
 template <int A> struct aligned;
@@ -125,5 +161,5 @@ struct sD3DException : public std::exception {
 };
 
 
-void dbg_msg(cstr format);
+void dbg_msg1(cstr format);
 void dbg_msg(cstr format, ...);

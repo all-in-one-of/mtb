@@ -7,11 +7,46 @@ struct sModelVtx {
 	vec2f uv;
 };
 
+struct sCameraCBuf {
+	DirectX::XMMATRIX viewProj;
+	DirectX::XMMATRIX view;
+	DirectX::XMMATRIX proj;
+	DirectX::XMVECTOR camPos;
+};
+
+struct sMeshCBuf {
+	DirectX::XMMATRIX wmtx;
+};
+
+struct sImguiCameraCBuf {
+	DirectX::XMMATRIX proj;
+};
 
 class cBufferBase : noncopyable {
 protected:
-	moveable_ptr<ID3D11Buffer> mpBuf;
+	com_ptr<ID3D11Buffer> mpBuf;
 public:
+	class cMapHandle : noncopyable {
+		ID3D11DeviceContext* mpCtx;
+		ID3D11Buffer* mpBuf;
+		D3D11_MAPPED_SUBRESOURCE mMSR;
+	public:
+		cMapHandle(ID3D11DeviceContext* pCtx, ID3D11Buffer* pBuf);
+		~cMapHandle();
+		cMapHandle(cMapHandle&& o) : mpCtx(o.mpCtx), mpBuf(o.mpBuf), mMSR(o.mMSR) {
+			o.mMSR.pData = nullptr;
+		}
+		cMapHandle& operator=(cMapHandle&& o) {
+			mpCtx = o.mpCtx;
+			mpBuf = o.mpBuf;
+			mMSR = o.mMSR;
+			o.mMSR.pData = nullptr;
+			return *this;
+		}
+		void* data() const { return mMSR.pData; }
+		bool is_mapped() const { return !!data(); }
+	};
+
 	cBufferBase() = default;
 	~cBufferBase() { deinit(); }
 	cBufferBase(cBufferBase&& o) : mpBuf(std::move(o.mpBuf)) {}
@@ -21,16 +56,18 @@ public:
 	}
 
 	void deinit() {
-		if (mpBuf) {
-			mpBuf->Release();
-			mpBuf.reset();
-		}
+		mpBuf.reset();
 	}
+
+	cMapHandle map(ID3D11DeviceContext* pCtx);
 
 protected:
 	void init_immutable(ID3D11Device* pDev,
 		void const* pData, uint32_t size,
 		D3D11_BIND_FLAG bind);
+
+	void init_write_only(ID3D11Device* pDev, 
+		uint32_t size, D3D11_BIND_FLAG bind);
 };
 
 class cConstBufferBase : public cBufferBase {
@@ -86,6 +123,7 @@ public:
 	}
 
 	void init(ID3D11Device* pDev, void const* pVtxData, uint32_t vtxCount, uint32_t vtxSize);
+	void init_write_only(ID3D11Device* pDev, uint32_t vtxCount, uint32_t vtxSize);
 
 	void set(ID3D11DeviceContext* pCtx, uint32_t slot, uint32_t offset) const;
 };
@@ -105,26 +143,16 @@ public:
 	void set(ID3D11DeviceContext* pCtx, uint32_t offset) const;
 };
 
-
-struct sCameraCBuf {
-	DirectX::XMMATRIX viewProj;
-	DirectX::XMMATRIX view;
-	DirectX::XMMATRIX proj;
-	DirectX::XMVECTOR camPos;
-};
-
-struct sMeshCBuf {
-	DirectX::XMMATRIX wmtx;
-};
-
 class cConstBufStorage {
 public:
 	cConstBufferSlotted<sCameraCBuf, 0> mCameraCBuf;
 	cConstBufferSlotted<sMeshCBuf, 1> mMeshCBuf;
+	cConstBufferSlotted<sImguiCameraCBuf, 0> mImguiCameraCBuf;
 
 	cConstBufStorage(ID3D11Device* pDev) {
 		mCameraCBuf.init(pDev);
 		mMeshCBuf.init(pDev);
+		mImguiCameraCBuf.init(pDev);
 	}
 
 	static cConstBufStorage& get();
@@ -132,14 +160,66 @@ public:
 
 
 class cSamplerStates {
-	ID3D11SamplerState* mpLinear = nullptr;
+	com_ptr<ID3D11SamplerState> mpLinear;
 public:
 	static cSamplerStates& get();
 
 	cSamplerStates(ID3D11Device* pDev);
-	~cSamplerStates();
 
 	ID3D11SamplerState* linear() const { return mpLinear; }
 
 	static D3D11_SAMPLER_DESC linear_desc();
+};
+
+class cBlendStates : noncopyable {
+	com_ptr<ID3D11BlendState> mpImgui;
+public:
+	static cBlendStates& get();
+
+	cBlendStates(ID3D11Device* pDev);
+
+	ID3D11BlendState* imgui() const { return mpImgui; }
+
+	void set_imgui(ID3D11DeviceContext* pCtx) const { set(pCtx, imgui()); }
+
+	static void set(ID3D11DeviceContext* pCtx, ID3D11BlendState* pState);
+	static D3D11_BLEND_DESC imgui_desc();
+};
+
+class cRasterizerStates : noncopyable {
+	com_ptr<ID3D11RasterizerState> mpDefault;
+	com_ptr<ID3D11RasterizerState> mpImgui;
+public:
+	static cRasterizerStates& get();
+
+	cRasterizerStates(ID3D11Device* pDev);
+
+	ID3D11RasterizerState* def() const { return mpDefault; }
+	ID3D11RasterizerState* imgui() const { return mpImgui; }
+
+	void set_def(ID3D11DeviceContext* pCtx) const { set(pCtx, def()); }
+	void set_imgui(ID3D11DeviceContext* pCtx) const { set(pCtx, imgui()); }
+
+	static void set(ID3D11DeviceContext* pCtx, ID3D11RasterizerState* pState);
+	static D3D11_RASTERIZER_DESC default_desc();
+	static D3D11_RASTERIZER_DESC imgui_desc();
+};
+
+class cDepthStencilStates : noncopyable {
+	com_ptr<ID3D11DepthStencilState> mpDefault;
+	com_ptr<ID3D11DepthStencilState> mpImgui;
+public:
+	static cDepthStencilStates& get();
+
+	cDepthStencilStates(ID3D11Device* pDev);
+
+	ID3D11DepthStencilState* def() const { return mpDefault; }
+	ID3D11DepthStencilState* imgui() const { return mpImgui; }
+
+	void set_def(ID3D11DeviceContext* pCtx) const { set(pCtx, def()); }
+	void set_imgui(ID3D11DeviceContext* pCtx) const { set(pCtx, imgui()); }
+
+	static void set(ID3D11DeviceContext* pCtx, ID3D11DepthStencilState* pState);
+	static D3D11_DEPTH_STENCIL_DESC default_desc();
+	static D3D11_DEPTH_STENCIL_DESC imgui_desc();
 };

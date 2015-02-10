@@ -6,7 +6,7 @@
 #define NOMINMAX
 #include <Windows.h>
 
-void dbg_msg(cstr format) {
+void dbg_msg1(cstr format) {
 	::OutputDebugStringA(format);
 }
 

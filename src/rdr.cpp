@@ -4,33 +4,29 @@
 #include "math.hpp"
 #include "rdr.hpp"
 
-void cConstBufferBase::init(ID3D11Device* pDev, size_t size) {
-	auto desc = D3D11_BUFFER_DESC();
-	desc.Usage = D3D11_USAGE_DYNAMIC;
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	desc.ByteWidth = (UINT)size;
-
-	HRESULT hr = pDev->CreateBuffer(&desc, nullptr, mpBuf.pp());
-	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBuffer const buffer failed");
-}
-
-void cConstBufferBase::update(ID3D11DeviceContext* pCtx, void const* pData, size_t size) {
-	D3D11_MAPPED_SUBRESOURCE mr;
-	HRESULT hr = pCtx->Map(mpBuf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mr);
+cBufferBase::cMapHandle::cMapHandle(ID3D11DeviceContext* pCtx, ID3D11Buffer* pBuf) : mpCtx(pCtx), mpBuf(pBuf), mMSR() {
+	HRESULT hr = pCtx->Map(pBuf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mMSR);
 	if (SUCCEEDED(hr)) {
-		::memcpy(mr.pData, pData, size);
-		pCtx->Unmap(mpBuf, 0);
 	}
 }
 
+cBufferBase::cMapHandle::~cMapHandle() {
+	if (is_mapped()) {
+		mpCtx->Unmap(mpBuf, 0);
+		mMSR.pData = nullptr;
+	}
+}
+
+cBufferBase::cMapHandle cBufferBase::map(ID3D11DeviceContext* pCtx) {
+	return cMapHandle(pCtx, mpBuf);
+}
 
 void cBufferBase::init_immutable(ID3D11Device* pDev, void const* pData, uint32_t size, D3D11_BIND_FLAG bind) {
 	auto desc = D3D11_BUFFER_DESC();
 	desc.ByteWidth = size;
 	desc.Usage = D3D11_USAGE_IMMUTABLE;
 	desc.BindFlags = bind;
-	
+
 	D3D11_SUBRESOURCE_DATA initData;
 	initData.pSysMem = pData;
 	initData.SysMemPitch = 0;
@@ -40,8 +36,35 @@ void cBufferBase::init_immutable(ID3D11Device* pDev, void const* pData, uint32_t
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBuffer immutable failed");
 }
 
+void cBufferBase::init_write_only(ID3D11Device* pDev, uint32_t size, D3D11_BIND_FLAG bind) {
+	auto desc = D3D11_BUFFER_DESC();
+	desc.ByteWidth = size;
+	desc.Usage = D3D11_USAGE_DYNAMIC;
+	desc.BindFlags = bind;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	HRESULT hr = pDev->CreateBuffer(&desc, nullptr, mpBuf.pp());
+	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBuffer mutable write-only failed");
+}
+
+void cConstBufferBase::init(ID3D11Device* pDev, size_t size) {
+	init_write_only(pDev, (uint32_t)size, D3D11_BIND_CONSTANT_BUFFER);
+}
+
+void cConstBufferBase::update(ID3D11DeviceContext* pCtx, void const* pData, size_t size) {
+	auto m = map(pCtx);
+	if (m.is_mapped()) {
+		::memcpy(m.data(), pData, size);
+	}
+}
+
 void cVertexBuffer::init(ID3D11Device* pDev, void const* pVtxData, uint32_t vtxCount, uint32_t vtxSize) {
 	init_immutable(pDev, pVtxData, vtxCount * vtxSize, D3D11_BIND_VERTEX_BUFFER);
+	mVtxSize = vtxSize;
+}
+
+void cVertexBuffer::init_write_only(ID3D11Device* pDev, uint32_t vtxCount, uint32_t vtxSize) {
+	cBufferBase::init_write_only(pDev, vtxCount * vtxSize, D3D11_BIND_VERTEX_BUFFER);
 	mVtxSize = vtxSize;
 }
 
@@ -67,15 +90,8 @@ void cIndexBuffer::set(ID3D11DeviceContext* pCtx, uint32_t offset) const {
 
 cSamplerStates::cSamplerStates(ID3D11Device* pDev) {
 	HRESULT hr;
-	hr = pDev->CreateSamplerState(&linear_desc(), &mpLinear);
+	hr = pDev->CreateSamplerState(&linear_desc(), mpLinear.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateSamplerState linear failed");
-}
-
-cSamplerStates::~cSamplerStates() {
-	if (mpLinear) {
-		mpLinear->Release();
-		mpLinear = nullptr;
-	}
 }
 
 D3D11_SAMPLER_DESC cSamplerStates::linear_desc() {
@@ -94,3 +110,95 @@ D3D11_SAMPLER_DESC cSamplerStates::linear_desc() {
 
 	return desc;
 }
+
+
+cBlendStates::cBlendStates(ID3D11Device* pDev) {
+	HRESULT hr;
+	hr = pDev->CreateBlendState(&imgui_desc(), mpImgui.pp());
+	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBlendState imgui failed");
+}
+
+void cBlendStates::set(ID3D11DeviceContext* pCtx, ID3D11BlendState* pState) {
+	pCtx->OMSetBlendState(pState, nullptr, 0xFFFFFFFF);
+}
+
+D3D11_BLEND_DESC cBlendStates::imgui_desc() {
+	auto desc = D3D11_BLEND_DESC();
+	desc.RenderTarget[0].BlendEnable = true;
+	desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_SRC_ALPHA;
+	desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	return desc;
+}
+
+
+cRasterizerStates::cRasterizerStates(ID3D11Device* pDev) {
+	HRESULT hr;
+	hr = pDev->CreateRasterizerState(&default_desc(), mpDefault.pp());
+	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateRasterizerState default failed");
+
+	hr = pDev->CreateRasterizerState(&imgui_desc(), mpImgui.pp());
+	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateRasterizerState imgui failed");
+}
+
+void cRasterizerStates::set(ID3D11DeviceContext* pCtx, ID3D11RasterizerState* pState) {
+	pCtx->RSSetState(pState);
+}
+
+D3D11_RASTERIZER_DESC cRasterizerStates::default_desc() {
+	auto desc = D3D11_RASTERIZER_DESC();
+	desc.FillMode = D3D11_FILL_SOLID;
+	desc.CullMode = D3D11_CULL_NONE;
+	desc.FrontCounterClockwise = FALSE;
+	desc.DepthClipEnable = TRUE;
+	desc.ScissorEnable = FALSE;
+	desc.MultisampleEnable = FALSE;
+	desc.AntialiasedLineEnable = FALSE;
+	return desc;
+}
+
+D3D11_RASTERIZER_DESC cRasterizerStates::imgui_desc() {
+	auto desc = D3D11_RASTERIZER_DESC();
+	desc.FillMode = D3D11_FILL_SOLID;
+	desc.CullMode = D3D11_CULL_NONE;
+	desc.FrontCounterClockwise = FALSE;
+	desc.DepthClipEnable = TRUE;
+	desc.ScissorEnable = TRUE;
+	desc.MultisampleEnable = FALSE;
+	desc.AntialiasedLineEnable = FALSE;
+	return desc;
+}
+
+
+cDepthStencilStates::cDepthStencilStates(ID3D11Device* pDev) {
+	HRESULT hr;
+	hr = pDev->CreateDepthStencilState(&default_desc(), mpDefault.pp());
+	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateDepthStencilState default failed");
+
+	hr = pDev->CreateDepthStencilState(&imgui_desc(), mpImgui.pp());
+	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateDepthStencilState imgui failed");
+}
+
+void cDepthStencilStates::set(ID3D11DeviceContext* pCtx, ID3D11DepthStencilState* pState) {
+	pCtx->OMSetDepthStencilState(pState, 0);
+}
+
+D3D11_DEPTH_STENCIL_DESC cDepthStencilStates::default_desc() {
+	auto desc = D3D11_DEPTH_STENCIL_DESC();
+	desc.DepthEnable = true;
+	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	desc.DepthFunc = D3D11_COMPARISON_LESS;
+	desc.StencilEnable = false;
+	return desc;
+}
+D3D11_DEPTH_STENCIL_DESC cDepthStencilStates::imgui_desc() {
+	auto desc = D3D11_DEPTH_STENCIL_DESC();
+	desc.DepthEnable = false;
+	desc.StencilEnable = false;
+	return desc;
+}
+

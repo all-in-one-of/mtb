@@ -12,6 +12,9 @@
 #include "input.hpp"
 #include "camera.hpp"
 #include "texture.hpp"
+#include "imgui_impl.hpp"
+
+#include <imgui.h>
 
 namespace dx = DirectX;
 using dx::XMFLOAT4;
@@ -83,6 +86,10 @@ struct sGlobals {
 	GlobalSingleton<cCamera> camera;
 	GlobalSingleton<cConstBufStorage> cbufStorage;
 	GlobalSingleton<cSamplerStates> samplerStates;
+	GlobalSingleton<cBlendStates> blendStates;
+	GlobalSingleton<cRasterizerStates> rasterizeStates;
+	GlobalSingleton<cDepthStencilStates> depthStates;
+	GlobalSingleton<cImgui> imgui;
 };
 
 sGlobals globals;
@@ -94,13 +101,16 @@ cCamera& get_camera() { return globals.camera.get(); }
 vec2i get_window_size() { return globals.win.get().get_window_size(); }
 cConstBufStorage& cConstBufStorage::get() { return globals.cbufStorage.get(); }
 cSamplerStates& cSamplerStates::get() { return globals.samplerStates.get(); }
+cBlendStates& cBlendStates::get() { return globals.blendStates.get(); }
+cRasterizerStates& cRasterizerStates::get() { return globals.rasterizeStates.get(); }
+cDepthStencilStates& cDepthStencilStates::get() { return globals.depthStates.get(); }
+cImgui& cImgui::get() { return globals.imgui.get(); }
 
 class cGnomon {
 	struct sVtx {
 		float mPos[3];
 		float mClr[4];
 	};
-
 
 	cShader* mpVS = nullptr;
 	cShader* mpPS = nullptr;
@@ -214,10 +224,32 @@ public:
 		mModel.disp();
 	}
 };
+class cSphere {
+	cModel mModel;
+	cModelData mMdlData;
+public:
 
+	void init() {
+		mMdlData.load("../data/sphere.obj");
+
+		mModel.init(mMdlData);
+
+		mModel.mpGrpMtl = std::make_unique<sGroupMaterial[]>(mMdlData.mGrpNum);
+	}
+
+	void deinit() {
+		mModel.deinit();
+		mMdlData.unload();
+	}
+
+	void disp() {
+		mModel.disp();
+	}
+};
 
 cGnomon gnomon;
 cLightning lightning;
+cSphere sphere;
 
 cTrackballCam trackballCam;
 
@@ -226,6 +258,10 @@ float camRot = DEG2RAD(0.01f);
 void do_frame() {
 	auto& gfx = get_gfx();
 	gfx.begin_frame();
+	cImgui::get().update();
+
+	cRasterizerStates::get().set_def(get_gfx().get_ctx());
+	cDepthStencilStates::get().set_def(get_gfx().get_ctx());
 
 	//dx::XMMATRIX m = dx::XMMatrixRotationY(camRot);
 	//dx::XMVECTOR cp = cam.mPos;
@@ -241,15 +277,20 @@ void do_frame() {
 	camCBuf.mData.camPos = cam.mView.mPos;
 	camCBuf.update(gfx.get_ctx());
 	camCBuf.set_VS(gfx.get_ctx());
+	camCBuf.set_PS(gfx.get_ctx());
 
 	//obj.exec();
 	//obj.disp();
 
-	lightning.disp();
+	//lightning.disp();
+	sphere.disp();
 
 	gnomon.exec();
 	gnomon.disp();
 
+	ImGui::Text("Hello, world!");
+
+	cImgui::get().disp();
 	gfx.end_frame();
 }
 
@@ -302,11 +343,16 @@ int main(int argc, char* argv[]) {
 	auto ss = globals.shaderStorage.ctor_scoped();
 	auto cbuf = globals.cbufStorage.ctor_scoped(get_gfx().get_dev());
 	auto smps = globals.samplerStates.ctor_scoped(get_gfx().get_dev());
+	auto blnds = globals.blendStates.ctor_scoped(get_gfx().get_dev());
+	auto rsst = globals.rasterizeStates.ctor_scoped(get_gfx().get_dev());
+	auto dpts = globals.depthStates.ctor_scoped(get_gfx().get_dev());
+	auto imgui = globals.imgui.ctor_scoped(get_gfx());
 	auto cam = globals.camera.ctor_scoped();
 
 	trackballCam.init(get_camera());
 
-	lightning.init();
+	//lightning.init();
+	sphere.init();
 
 	loop();
 

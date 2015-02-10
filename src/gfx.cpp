@@ -4,6 +4,8 @@
 
 #include <SDL_rwops.h>
 
+#include <d3dcompiler.h>
+
 cGfx::sDev::sDev(DXGI_SWAP_CHAIN_DESC& sd, UINT flags) {
 	D3D_FEATURE_LEVEL lvl;
 
@@ -56,36 +58,6 @@ cGfx::sRTView::sRTView(sDev& dev) {
 		throw sD3DException(hr, "CreateRenderTargetView failed");
 }
 
-cGfx::sRSState::sRSState(sDev& dev) {
-	auto desc = D3D11_RASTERIZER_DESC();
-	desc.FillMode = D3D11_FILL_SOLID;
-	desc.CullMode = D3D11_CULL_NONE;
-	desc.FrontCounterClockwise = FALSE;
-	desc.DepthClipEnable = TRUE;
-	desc.ScissorEnable = FALSE;
-	desc.MultisampleEnable = FALSE;
-	desc.AntialiasedLineEnable = FALSE;
-
-	HRESULT hr = dev.mpDev->CreateRasterizerState(&desc, mpRSState.pp());
-	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateRasterizerState");
-
-	dev.mpImmCtx->RSSetState(mpRSState);
-}
-
-cGfx::sDSState::sDSState(sDev& dev) {
-	auto desc = D3D11_DEPTH_STENCIL_DESC();
-	desc.DepthEnable = false;
-	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	desc.DepthFunc = D3D11_COMPARISON_LESS;
-
-	desc.StencilEnable = false;
-
-	HRESULT hr = dev.mpDev->CreateDepthStencilState(&desc, mpDSState.pp());
-	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateDepthStencilState");
-
-	dev.mpImmCtx->OMSetDepthStencilState(mpDSState, 0);
-}
-
 cGfx::cGfx(HWND hwnd) {
 	HRESULT hr = S_OK;
 
@@ -127,8 +99,6 @@ cGfx::cGfx(HWND hwnd) {
 	vp.MaxDepth = 1.0f;
 
 	mDev.mpImmCtx->RSSetViewports(1, &vp);
-
-	mRSState = sRSState(mDev);
 }
 
 void cGfx::begin_frame() {
@@ -142,7 +112,7 @@ void cGfx::end_frame() {
 }
 
 
-static cShaderBytecode LoadShaderFile(cstr filepath) {
+static cShaderBytecode load_shader_file(cstr filepath) {
 	auto rw = SDL_RWFromFile(filepath, "rb");
 	if (!rw) 
 		return cShaderBytecode();
@@ -162,9 +132,42 @@ static cShaderBytecode LoadShaderFile(cstr filepath) {
 	return cShaderBytecode(std::move(pdata), size);
 }
 
+static cShaderBytecode load_shader_cstr(cstr code, cstr profile) {
+	size_t strSize = code.length();
+
+	com_ptr<ID3DBlob> blob;
+	com_ptr<ID3DBlob> err;
+	HRESULT hr = ::D3DCompile(code, strSize, nullptr, nullptr, nullptr, "main", profile, 0, 0, blob.pp(), err.pp());
+	if (FAILED(hr)) {
+		if (err) {
+			dbg_msg1((char*)err->GetBufferPointer());
+		}
+		return cShaderBytecode();
+	}
+
+	size_t size = blob->GetBufferSize();
+	auto pdata = std::make_unique<char[]>(size);
+	::memcpy(pdata.get(), blob->GetBufferPointer(), size);
+	return cShaderBytecode(std::move(pdata), size);
+}
 
 cShader* cShaderStorage::load_VS(cstr filepath) {
-	auto code = LoadShaderFile(filepath);
+	return create_VS(load_shader_file(filepath));
+}
+
+cShader* cShaderStorage::load_PS(cstr filepath) {
+	return create_PS(load_shader_file(filepath));
+}
+
+cShader* cShaderStorage::create_VS(cstr code) {
+	return create_VS(load_shader_cstr(code, "vs_5_0"));
+}
+
+cShader* cShaderStorage::create_PS(cstr code) {
+	return create_PS(load_shader_cstr(code, "ps_5_0"));
+}
+
+cShader* cShaderStorage::create_VS(cShaderBytecode&& code) {
 	if (code.get_size() == 0) return nullptr;
 
 	auto pDev = get_gfx().get_dev();
@@ -175,8 +178,7 @@ cShader* cShaderStorage::load_VS(cstr filepath) {
 	return put_shader(pVS, std::move(code));
 }
 
-cShader* cShaderStorage::load_PS(cstr filepath) {
-	auto code = LoadShaderFile(filepath);
+cShader* cShaderStorage::create_PS(cShaderBytecode&& code) {
 	if (code.get_size() == 0) return nullptr;
 
 	auto pDev = get_gfx().get_dev();
