@@ -76,3 +76,8 @@ void cTexture::set_PS(ID3D11DeviceContext* pCtx, UINT slot) {
 	ID3D11ShaderResourceView* views[1] = { mpView };
 	pCtx->PSSetShaderResources(slot, 1, views);
 }
+
+void cTexture::set_null_PS(ID3D11DeviceContext* pCtx, UINT slot) {
+	ID3D11ShaderResourceView* views[1] = { nullptr };
+	pCtx->PSSetShaderResources(slot, 1, views);
+}

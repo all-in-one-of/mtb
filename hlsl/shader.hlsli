@@ -37,10 +37,8 @@ cbuffer Mesh : register(b1) {
 };
 
 cbuffer TestMtl : register(b2) {
-	float4 g_fresnel;
+	float3 g_fresnel;
 	float g_shin;
-
-	float3 _g_tmpasdasdfaffsdasdfsf;
 }
 
 Texture2D g_meshDiffTex : register(t0);

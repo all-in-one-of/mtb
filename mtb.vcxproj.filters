@@ -65,6 +65,9 @@
     <ClCompile Include="src\imgui_impl.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\serialization.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="hlsl\simple.vs.hlsl">

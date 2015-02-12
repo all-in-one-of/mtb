@@ -22,5 +22,9 @@ public:
 	bool load(ID3D11Device* pDev, cstr filepath);
 	void unload();
 
+	bool is_ready() const { return !!mpView; }
+
 	void set_PS(ID3D11DeviceContext* pCtx, uint32_t slot);
+
+	static void set_null_PS(ID3D11DeviceContext* pCtx, uint32_t slot);
 };

@@ -152,7 +152,7 @@ void cRasterizerStates::set(ID3D11DeviceContext* pCtx, ID3D11RasterizerState* pS
 D3D11_RASTERIZER_DESC cRasterizerStates::default_desc() {
 	auto desc = D3D11_RASTERIZER_DESC();
 	desc.FillMode = D3D11_FILL_SOLID;
-	desc.CullMode = D3D11_CULL_NONE;
+	desc.CullMode = D3D11_CULL_BACK;
 	desc.FrontCounterClockwise = FALSE;
 	desc.DepthClipEnable = TRUE;
 	desc.ScissorEnable = FALSE;

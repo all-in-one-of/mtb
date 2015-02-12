@@ -2,9 +2,8 @@
 #include "math.hpp"
 #include "rdr.hpp"
 #include "gfx.hpp"
-#include "model.hpp"
 #include "texture.hpp"
-
+#include "model.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -12,6 +11,8 @@
 #include <assimp/config.h>
 
 #include <cassert>
+#include <imgui.h>
+
 
 
 static vec3 as_vec3(aiVector3D const& v) {
@@ -153,9 +154,10 @@ void cModelData::unload() {
 }
 
 
-bool cModel::init(cModelData const& mdlData) {
+bool cModel::init(cModelData const& mdlData, cModelMaterial& mtl) {
 	mpData = &mdlData;
-		
+	mpMtl = &mtl;
+
 	auto& ss = get_shader_storage();
 	mpVS = ss.load_VS("model_solid.vs.cso");
 	mpPS = ss.load_PS("model.ps.cso");
@@ -202,12 +204,8 @@ void cModel::disp() {
 	auto grpNum = mpData->mGrpNum;
 	for (uint32_t i = 0; i < grpNum; ++i) {
 		sGroup const& grp = mpData->mpGroups[i];
-		sGroupMaterial const& mtl = mpGrpMtl[i];
 
-		if (mtl.mpTexBase && mtl.mpSmpBase) {
-			mtl.mpTexBase->set_PS(pCtx, 0);
-			pCtx->PSSetSamplers(0, 1, &mtl.mpSmpBase);
-		}
+		mpMtl->apply(pCtx, i);
 
 		mpData->mVtx.set(pCtx, 0, grp.mVtxOffset);
 		mpData->mIdx.set(pCtx, grp.mIdxOffset);
@@ -215,7 +213,98 @@ void cModel::disp() {
 		//pCtx->Draw(grp.mIdxCount, 0);
 		pCtx->DrawIndexed(grp.mIdxCount, 0, 0);
 
-		//break;
 	}
 
+}
+
+void cModel::dbg_ui() {
+	if (!mpData) return;
+	auto grpNum = mpData->mGrpNum;
+	char buf[64];
+	ImGui::Begin("model");
+	for (uint32_t i = 0; i < grpNum; ++i) {
+		sGroup const& grp = mpData->mpGroups[i];
+		auto const& name = mpData->mpGrpNames[i];
+		sGroupMaterial& mtl = mpMtl->mpGrpMtl[i];
+
+		::sprintf_s(buf, "grp #%d:%s", i, name.c_str());
+		if (ImGui::CollapsingHeader(buf)) {
+			ImGui::PushID(&mtl);
+
+			ImGui::SliderFloat3("F0", mtl.params.fresnel, 0.0f, 1.0f);
+			ImGui::SliderFloat("shin", &mtl.params.shin, 0.0f, 1000.0f);
+
+			ImGui::PopID();
+		}
+	}
+	if (ImGui::Button("Save")) {
+		mpMtl->save();
+	}
+	ImGui::End();
+}
+
+
+void sGroupMtlRes::apply(ID3D11DeviceContext* pCtx) {
+	if (mTexBase.is_ready() && mpSmpBase) {
+		mTexBase.set_PS(pCtx, 0);
+		pCtx->PSSetSamplers(0, 1, &mpSmpBase);
+	} else {
+		cTexture::set_null_PS(pCtx, 0);
+	}
+}
+
+void sGroupMaterial::apply(ID3D11DeviceContext* pCtx) const {
+	auto& cbs = cConstBufStorage::get();
+	cbs.mTestMtlCBuf.mData = params;
+	cbs.mTestMtlCBuf.update(pCtx);
+	cbs.mTestMtlCBuf.set_PS(pCtx);
+}
+
+void cModelMaterial::apply(ID3D11DeviceContext* pCtx, int i) {
+	mpGrpMtl[i].apply(pCtx);
+	mpGrpRes[i].apply(pCtx);
+}
+
+void sGroupMaterial::set_default() {
+	params.fresnel[0] = 0.025f;
+	params.fresnel[1] = 0.025f;
+	params.fresnel[2] = 0.025f;
+	params.shin = 9.25f;
+}
+
+
+bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, cstr filepath) {
+	mpMdlData = &mdlData;
+	auto grpNum = mpMdlData->mGrpNum;
+	mpGrpMtl = std::make_unique<sGroupMaterial[]>(grpNum);
+	mpGrpRes = std::make_unique<sGroupMtlRes[]>(grpNum);
+
+	if (filepath) { mFilepath = filepath; }
+	
+	if (!deserialize(filepath)) {
+		for (uint32_t i = 0; i < grpNum; ++i) {
+			mpGrpMtl[i].set_default();
+		}
+		return false;
+	}
+
+	for (uint32_t i = 0; i < grpNum; ++i) {
+		sGroupMaterial& mtl = mpGrpMtl[i];
+		sGroupMtlRes& res = mpGrpRes[i];
+
+		if (!mtl.texBaseName.empty()) {
+			if (res.mTexBase.load(pDev, mtl.texBaseName.c_str())) {
+				res.mpSmpBase = cSamplerStates::get().linear();
+			}
+		}
+	}
+
+	return true;
+}
+
+bool cModelMaterial::save(cstr filepath) {
+	if (!mpMdlData || !mpGrpMtl) return false;
+	if (!filepath) { filepath = mFilepath.c_str(); }
+	if (!filepath) { return false; }
+	return serialize(filepath);
 }

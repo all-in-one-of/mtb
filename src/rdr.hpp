@@ -23,10 +23,11 @@ struct sImguiCameraCBuf {
 };
 
 struct sTestMtlCBuf {
-	float fresnel[4];
-	float shin[1];
+	float fresnel[3];
+	float shin;
 
-	float _tmp[3];
+	template <class Archive>
+	void serialize(Archive& arc);
 };
 
 class cBufferBase : noncopyable {

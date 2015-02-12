@@ -2,7 +2,7 @@
 #include <string>
 
 struct sModelVtx;
-class cTexture;
+class cShader;
 
 struct sGroup {
 	uint32_t mVtxOffset;
@@ -36,7 +36,7 @@ public:
 		return *this;
 	}
 
-	cModelData& operator=(cModelData&) = delete;
+	//cModelData& operator=(cModelData&) = delete;
 
 	bool load(cstr filepath);
 	void unload();
@@ -44,25 +44,73 @@ public:
 
 
 struct sGroupMaterial {
-	cTexture* mpTexBase = nullptr;
+	sTestMtlCBuf params;
+	std::string texBaseName;
+public:
+	void apply(ID3D11DeviceContext* pCtx) const;
+	void set_default();
+
+	template <class Archive>
+	void serialize(Archive& arc);
+};
+
+struct sGroupMtlRes {
+	cTexture mTexBase;
 	ID3D11SamplerState* mpSmpBase = nullptr;
+
+	void apply(ID3D11DeviceContext* pCtx);
+};
+
+class cModelMaterial {
+public:
+	cModelData const* mpMdlData = nullptr;
+	std::unique_ptr<sGroupMaterial[]> mpGrpMtl;
+	std::unique_ptr<sGroupMtlRes[]> mpGrpRes;
+
+	std::string mFilepath;
+
+	cModelMaterial() {}
+	cModelMaterial(cModelMaterial&& o) :
+		mpMdlData(o.mpMdlData),
+		mpGrpMtl(std::move(o.mpGrpMtl))
+	{}
+	cModelMaterial& operator=(cModelMaterial&& o) {
+		mpMdlData = o.mpMdlData;
+		mpGrpMtl = std::move(o.mpGrpMtl);
+		return *this;
+	}
+
+	void apply(ID3D11DeviceContext* pCtx, int grp);
+
+	bool load(ID3D11Device* pDev, cModelData const& mdlData, cstr filepath);
+	bool save(cstr filepath = nullptr);
+	void unload();
+
+	cstr get_grp_name(uint32_t i) const { return mpMdlData->mpGrpNames[i].c_str(); }
+
+protected:
+	bool serialize(cstr filepath);
+	bool deserialize(cstr filepath);
 };
 
 class cModel {
 	cModelData const* mpData = nullptr;
+	cModelMaterial* mpMtl = nullptr;
 
 	cShader* mpVS = nullptr;
 	cShader* mpPS = nullptr;
 	ID3D11InputLayout* mpIL = nullptr;
 
 public:
-	std::unique_ptr<sGroupMaterial[]> mpGrpMtl;
+	
 	
 	cModel() {}
 	~cModel() {}
 
-	bool init(cModelData const& mdlData);
+	bool init(cModelData const& mdlData, cModelMaterial& mtl);
 	void deinit();
 
 	void disp();
+
+	void dbg_ui();
 };

@@ -98,7 +98,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\cereal\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -115,7 +115,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\cereal\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -142,7 +142,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\cereal\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -163,7 +163,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\cereal\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -183,6 +183,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\model.cpp" />
     <ClCompile Include="src\rdr.cpp" />
+    <ClCompile Include="src\serialization.cpp" />
     <ClCompile Include="src\texture.cpp" />
   </ItemGroup>
   <ItemGroup>

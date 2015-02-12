@@ -8,10 +8,10 @@
 #include "math.hpp"
 #include "gfx.hpp"
 #include "rdr.hpp"
+#include "texture.hpp"
 #include "model.hpp"
 #include "input.hpp"
 #include "camera.hpp"
-#include "texture.hpp"
 #include "imgui_impl.hpp"
 
 #include <imgui.h>
@@ -190,57 +190,36 @@ private:
 class cLightning {
 	cModel mModel;
 	cModelData mMdlData;
-	std::unique_ptr<cTexture[]> mpTextures;
+	cModelMaterial mMtl;
 public:
 
 	void init() {
 		//mdlData.load("../data/jill.obj");
 		mMdlData.load("../data/lightning.obj");
-
-		mModel.init(mMdlData);
-
-		mModel.mpGrpMtl = std::make_unique<sGroupMaterial[]>(mMdlData.mGrpNum);
-		auto* pMtls = mModel.mpGrpMtl.get();
-
-		mpTextures = std::make_unique<cTexture[]>(mMdlData.mGrpNum);
-		
-		auto pDev = get_gfx().get_dev();
-		char buf[512];
-		for (uint32_t i = 0; i < mMdlData.mGrpNum; ++i) {
-			::sprintf_s(buf, "../data/lightning_tex/%s_base.dds", mMdlData.mpGrpNames[i].c_str());
-			mpTextures[i].load(pDev, buf);
-			pMtls[i].mpTexBase = &mpTextures[i];
-			pMtls[i].mpSmpBase = cSamplerStates::get().linear();
-		}
+		mMtl.load(get_gfx().get_dev(), mMdlData, "../data/lightning.mtl");
+		mModel.init(mMdlData, mMtl);
 	}
 
 	void deinit() {
 		mModel.deinit();
 		mMdlData.unload();
-		mpTextures.release();
 	}
 
 	void disp() {
+		mModel.dbg_ui();
 		mModel.disp();
 	}
 };
 class cSphere {
 	cModel mModel;
 	cModelData mMdlData;
+	cModelMaterial mMtl;
 public:
 
 	void init() {
 		mMdlData.load("../data/sphere.obj");
-
-		mModel.init(mMdlData);
-
-		mModel.mpGrpMtl = std::make_unique<sGroupMaterial[]>(mMdlData.mGrpNum);
-
-		auto& cbs = cConstBufStorage::get();
-		cbs.mTestMtlCBuf.mData.fresnel[0] = 1.0f;
-		cbs.mTestMtlCBuf.mData.fresnel[1] = 1.0f;
-		cbs.mTestMtlCBuf.mData.fresnel[2] = 1.0f;
-		cbs.mTestMtlCBuf.mData.shin[0] = 100.0f;
+		mMtl.load(get_gfx().get_dev(), mMdlData, nullptr);
+		mModel.init(mMdlData, mMtl);
 	}
 
 	void deinit() {
@@ -249,16 +228,6 @@ public:
 	}
 
 	void disp() {
-		auto& cbs = cConstBufStorage::get();
-
-		ImGui::SliderFloat3("fresnel", cbs.mTestMtlCBuf.mData.fresnel, 0.0f, 1.0f);
-		//ImGui::SliderFloat("fresnel", cbs.mTestMtlCBuf.mData.fresnel, 0.0f, 1.0f);
-		ImGui::SliderFloat("shin", cbs.mTestMtlCBuf.mData.shin, 0.0f, 1000.0f);
-
-		cbs.mTestMtlCBuf.update(get_gfx().get_ctx());
-		cbs.mTestMtlCBuf.set_PS(get_gfx().get_ctx());
-
-
 		mModel.disp();
 	}
 };
@@ -298,8 +267,8 @@ void do_frame() {
 	//obj.exec();
 	//obj.disp();
 
-	//lightning.disp();
-	sphere.disp();
+	lightning.disp();
+	//sphere.disp();
 
 	gnomon.exec();
 	gnomon.disp();
@@ -368,8 +337,8 @@ int main(int argc, char* argv[]) {
 
 	trackballCam.init(get_camera());
 
-	//lightning.init();
-	sphere.init();
+	lightning.init();
+	//sphere.init();
 
 	loop();
 
