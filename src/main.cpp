@@ -249,8 +249,6 @@ public:
 	}
 
 	void disp() {
-		ImGui::Text("Hello, world!");
-
 		auto& cbs = cConstBufStorage::get();
 
 		ImGui::SliderFloat3("fresnel", cbs.mTestMtlCBuf.mData.fresnel, 0.0f, 1.0f);
@@ -329,6 +327,9 @@ void loop() {
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
 				inputMgr.on_mouse_button(ev.button);
+				break;
+			case SDL_TEXTINPUT:
+				inputMgr.on_text_input(ev.text);
 				break;
 			}
 		}

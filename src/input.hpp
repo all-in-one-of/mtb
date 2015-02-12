@@ -1,7 +1,9 @@
 #include <bitset>
+#include <vector>
 
 struct SDL_MouseMotionEvent;
 struct SDL_MouseButtonEvent;
+struct SDL_TextInputEvent;
 
 class cInputMgr {
 public:
@@ -29,10 +31,16 @@ public:
 
 	uint32_t mKMod;
 	uint32_t mKModPrev;
+
+	std::vector<uint32_t> mTextInputs;
+	bool mTextinputEnabled = false;
 public:
+
+	cInputMgr();
 		
 	void on_mouse_button(SDL_MouseButtonEvent const& ev);
 	void on_mouse_motion(SDL_MouseMotionEvent const& ev);
+	void on_text_input(SDL_TextInputEvent const& ev);
 
 	void preupdate();
 	void update();
@@ -56,6 +64,9 @@ public:
 	bool kmod_held(uint32_t kmod) const { return (mKMod & kmod) && (mKModPrev & kmod); }
 	bool kmod_state(uint32_t kmod) const { return !!(mKMod & kmod); }
 	bool kmod_state_prev(uint32_t kmod) const { return !!(mKModPrev & kmod); }
+
+	void enable_textinput(bool val) { mTextinputEnabled = val; }
+	std::vector<uint32_t> const& get_textinput() const { return mTextInputs; }
 };
 
 cInputMgr& get_input_mgr();

@@ -6,6 +6,10 @@
 
 static_assert(SDL_NUM_SCANCODES == cInputMgr::KEYS_COUNT, "SDL_NUM_SCANCODES != cInputMgr::KEYS_COUNT");
 
+cInputMgr::cInputMgr() {
+	mTextInputs.reserve(16);
+}
+
 void cInputMgr::on_mouse_motion(SDL_MouseMotionEvent const& ev) {
 	mMousePos = { ev.x, ev.y };
 }
@@ -28,11 +32,29 @@ void cInputMgr::on_mouse_button(SDL_MouseButtonEvent const& ev) {
 	//dbg_msg("%d %d %d\n", ev.type, ev.state, ev.clicks);
 }
 
+void cInputMgr::on_text_input(SDL_TextInputEvent const& ev) {
+	auto res = SDL_iconv_utf8_ucs4(ev.text);
+	if (res) {
+		auto c = res;
+		while (*c) {
+			mTextInputs.push_back(*c);
+			++c;
+		}
+	}
+}
+
 void cInputMgr::preupdate() {
 	mMousePosPrev = mMousePos;
 	mMouseBtnPrev = mMouseBtn;
 	mKeysPrev = mKeys;
 	mKModPrev = mKMod;
+
+	if (mTextinputEnabled) {
+		SDL_StartTextInput();
+	} else {
+		SDL_StopTextInput();
+	}
+	mTextInputs.clear();
 }
 
 void cInputMgr::update() {

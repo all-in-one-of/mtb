@@ -135,7 +135,15 @@ void cImgui::update() {
 	io.KeyCtrl = input.kmod_state(KMOD_CTRL);
 	io.KeyShift = input.kmod_state(KMOD_SHIFT);
 
+	auto const& text = input.get_textinput();
+	for (auto c : text) {
+		auto imchar = (ImWchar)c;
+		io.AddInputCharacter(imchar);
+	}
+
 	ImGui::NewFrame();
+
+	input.enable_textinput(io.WantCaptureKeyboard);
 }
 
 void cImgui::disp() {
