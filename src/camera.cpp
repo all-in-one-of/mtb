@@ -1,6 +1,6 @@
 #include "math.hpp"
-#include "camera.hpp"
 #include "common.hpp"
+#include "camera.hpp"
 #include "input.hpp"
 
 #include <SDL_keycode.h>
@@ -18,6 +18,18 @@ void cCamera::sView::calc_proj(float fovY, float aspect, float nearZ, float farZ
 
 void cCamera::sView::calc_viewProj() {
 	mViewProj = mView * mProj;
+}
+
+cCamera::cCamera() {
+	if (load("camera.json")) {
+		recalc();
+	} else {
+		set_default();
+	}
+}
+
+cCamera::~cCamera() {
+	save("camera.json");
 }
 
 void cCamera::set_default() {

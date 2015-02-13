@@ -23,12 +23,18 @@ public:
 	float mFarZ;
 
 public:
-	cCamera() {
-		set_default();
-	}
+	cCamera();
+	~cCamera();
 
 	void set_default();
 	void recalc();
+
+public:
+	bool save(cstr filepath);
+	bool load(cstr filepath);
+
+	template <class Archive>
+	void serialize(Archive& arc);
 };
 
 class cTrackball {
