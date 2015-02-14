@@ -178,6 +178,7 @@
     <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\common.cpp" />
     <ClCompile Include="src\gfx.cpp" />
+    <ClCompile Include="src\hou_geo.cpp" />
     <ClCompile Include="src\imgui_impl.cpp" />
     <ClCompile Include="src\input.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -188,6 +189,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\camera.hpp" />
+    <ClInclude Include="src\hou_geo.hpp" />
     <ClInclude Include="src\imgui_impl.hpp" />
     <ClInclude Include="src\input.hpp" />
     <ClInclude Include="src\math.hpp" />

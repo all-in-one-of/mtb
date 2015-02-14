@@ -195,7 +195,7 @@ public:
 
 	void init() {
 		//mdlData.load("../data/jill.obj");
-		mMdlData.load("../data/lightning.obj");
+		mMdlData.load("../data/lightning.geo");
 		mMtl.load(get_gfx().get_dev(), mMdlData, "../data/lightning.mtl");
 		mModel.init(mMdlData, mMtl);
 	}

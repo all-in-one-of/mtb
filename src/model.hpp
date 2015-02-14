@@ -40,6 +40,9 @@ public:
 
 	bool load(cstr filepath);
 	void unload();
+
+	bool load_assimp(cstr filepath);
+	bool load_hou_geo(cstr filepath);
 };
 
 

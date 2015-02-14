@@ -43,6 +43,12 @@ public:
 		if (l < sl) return false;
 		return (0 == ::memcmp(p, prefix.p, sl));
 	}
+
+	int cmpr(cstr o) const {
+		return ::strcmp(p, o.p);
+	}
+
+	bool equals(cstr o) const { return cmpr(o) == 0; }
 };
 
 template <typename T>

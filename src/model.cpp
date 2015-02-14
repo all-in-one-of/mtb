@@ -4,6 +4,7 @@
 #include "gfx.hpp"
 #include "texture.hpp"
 #include "model.hpp"
+#include "hou_geo.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -22,6 +23,28 @@ static vec2f as_vec2f(aiVector3D const& v) {
 	return {v.x, v.y};
 }
 
+static vec3 as_vec3(cHouGeoAttrib const* pa, int idx) {
+	float tmp[3] = { 0.0f, 0.0f, 0.0f };
+	if (pa) {
+		float const* val = pa->get_float_val(idx);
+		for (int i = 0; i < 3 && i < pa->mAttribCount; ++i) {
+			tmp[i] = val[i];
+		}
+	}
+	return { { tmp[0], tmp[1], tmp[2] } };
+}
+
+static vec2f as_vec2f(cHouGeoAttrib const* pa, int idx) {
+	float tmp[] = { 0.0f, 0.0f };
+	if (pa) {
+		float const* val = pa->get_float_val(idx);
+		for (int i = 0; i < 2 && i < pa->mAttribCount; ++i) {
+			tmp[i] = val[i];
+		}
+	}
+	return { tmp[0], tmp[1] };
+}
+
 struct sAIMeshInfo {
 	aiMesh* mpMesh;
 	cstr mName;
@@ -36,6 +59,107 @@ static void list_meshes(aiNode* pNode, std::vector<sAIMeshInfo>& meshes, aiScene
 }
 
 bool cModelData::load(cstr filepath) {
+	if (filepath.ends_with(".geo")) {
+		return load_hou_geo(filepath);
+	} else {
+		return load_assimp(filepath);
+	}
+}
+
+bool cModelData::load_hou_geo(cstr filepath) {
+	cHouGeoLoader geo;
+	if (!geo.load(filepath))
+		return false;
+
+	int numVtx = geo.mPointCount;
+	int numIdx = geo.mVertexCount;
+	int numGrp = geo.mNonemptyGroups;
+
+	auto pGroups = std::make_unique<sGroup[]>(numGrp);
+	auto pVtx = std::make_unique<sModelVtx[]>(numVtx);
+	auto pIdx = std::make_unique<uint16_t[]>(numIdx);
+	auto pNames = std::make_unique<std::string[]>(numGrp);
+
+	const uint32_t vtxSize = sizeof(sModelVtx);
+	const DXGI_FORMAT idxFormat = DXGI_FORMAT_R16_UINT;
+
+	auto pVtxItr = pVtx.get();
+	auto pIdxItr = pIdx.get();
+	auto pGrpItr = pGroups.get();
+	auto pNamesItr = pNames.get();
+
+	cHouGeoAttrib const* pPosAttr = nullptr;
+	cHouGeoAttrib const* pNrmAttr = nullptr;
+	cHouGeoAttrib const* pUVAttr = nullptr;
+	cHouGeoAttrib const* pTngUAttr = nullptr;
+	cHouGeoAttrib const* pTngVAttr = nullptr;
+
+	for (int i = 0; i < geo.mPointAttribCount; ++i) {
+		auto const& attr = geo.mpPointAttribs[i];
+		if (attr.mName == "P" && attr.mType == cHouGeoAttrib::E_TYPE_fpreal32) {
+			pPosAttr = &attr;
+		}
+		else if (attr.mName == "N" && attr.mType == cHouGeoAttrib::E_TYPE_fpreal32) {
+			pNrmAttr = &attr;
+		}
+		else if (attr.mName == "uv" && attr.mType == cHouGeoAttrib::E_TYPE_fpreal32) {
+			pUVAttr = &attr;
+		}
+	}
+
+	for (int vtx = 0; vtx < numVtx; ++vtx) {
+		pVtxItr->pos = as_vec3(pPosAttr, vtx);
+		pVtxItr->nrm = as_vec3(pNrmAttr, vtx);
+		pVtxItr->uv = as_vec2f(pUVAttr, vtx);
+		pVtxItr->uv.y = -pVtxItr->uv.y;
+	
+		++pVtxItr;
+	}
+
+	auto const& poly = geo.mPoly;
+	auto const vmap = geo.mpVertexMap.get();
+
+	for (int igrp = 0; igrp < geo.mGroupsCount; ++igrp) {
+		auto const& grp = geo.mpGroups[igrp];
+		if (grp.mEmpty) { continue; }
+
+		auto pIdxGrpStart = pIdxItr;
+
+		for (int i = 0; i < grp.mIntervalsCount; ++i) {
+			auto const& iv = grp.mpIntervals[i];
+			for (int j = iv.start; j < iv.end; ++j) {
+				if (!poly[j].valid) continue;
+				for (int k = 0; k < 3; ++k) {
+					int pidx = poly[j].v[k];
+					*pIdxItr = (uint16_t)vmap[pidx];
+					pIdxItr++;
+				}
+			}
+		}
+
+		pGrpItr->mPolyType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		pGrpItr->mVtxOffset = 0;
+		pGrpItr->mIdxCount = static_cast<uint32_t>((pIdxItr - pIdxGrpStart));
+		pGrpItr->mIdxOffset = static_cast<uint32_t>((pIdxGrpStart - pIdx.get()) * sizeof(pIdxGrpStart[0]));
+		
+		*pNamesItr = grp.mName;
+
+		++pGrpItr;
+		++pNamesItr;
+	}
+
+	auto pDev = get_gfx().get_dev();
+	mVtx.init(pDev, pVtx.get(), numVtx, vtxSize);
+	mIdx.init(pDev, pIdx.get(), numIdx, idxFormat);
+
+	mGrpNum = numGrp;
+	mpGroups = std::move(pGroups);
+	mpGrpNames = std::move(pNames);
+
+	return false;
+}
+
+bool cModelData::load_assimp(cstr filepath) {
 	Assimp::Importer importer;
 
 	importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
