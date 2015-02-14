@@ -102,7 +102,7 @@ class cModel {
 
 	cShader* mpVS = nullptr;
 	cShader* mpPS = nullptr;
-	ID3D11InputLayout* mpIL = nullptr;
+	com_ptr<ID3D11InputLayout> mpIL;
 
 public:
 	

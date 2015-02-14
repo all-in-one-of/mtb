@@ -92,7 +92,7 @@ cImgui::cImgui(cGfx& gfx) {
 	};
 
 	auto& code = mpVS->get_code();
-	HRESULT hr = pDev->CreateInputLayout(vdsc, SIZEOF_ARRAY(vdsc), code.get_code(), code.get_size(), &mpIL);
+	HRESULT hr = pDev->CreateInputLayout(vdsc, SIZEOF_ARRAY(vdsc), code.get_code(), code.get_size(), mpIL.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
 
 	load_fonts();

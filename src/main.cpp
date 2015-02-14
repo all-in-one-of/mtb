@@ -114,7 +114,7 @@ class cGnomon {
 
 	cShader* mpVS = nullptr;
 	cShader* mpPS = nullptr;
-	ID3D11InputLayout* mpIL = nullptr;
+	com_ptr<ID3D11InputLayout> mpIL;
 	cVertexBuffer mVtxBuf;
 	int mState = 0;
 public:
@@ -165,7 +165,7 @@ private:
 		};
 		auto pDev = get_gfx().get_dev();
 		auto& code = mpVS->get_code();
-		HRESULT hr = pDev->CreateInputLayout(vdsc, SIZEOF_ARRAY(vdsc), code.get_code(), code.get_size(), &mpIL);
+		HRESULT hr = pDev->CreateInputLayout(vdsc, SIZEOF_ARRAY(vdsc), code.get_code(), code.get_size(), mpIL.pp());
 		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
 
 		sVtx vtx[6] = {
@@ -182,7 +182,7 @@ private:
 
 	void state_deinit() {
 		mVtxBuf.deinit();
-		if (mpIL) mpIL->Release();
+		mpIL.reset();
 	}
 };
 
@@ -234,7 +234,7 @@ public:
 
 cGnomon gnomon;
 cLightning lightning;
-cSphere sphere;
+//cSphere sphere;
 
 cTrackballCam trackballCam;
 
@@ -263,9 +263,6 @@ void do_frame() {
 	camCBuf.update(gfx.get_ctx());
 	camCBuf.set_VS(gfx.get_ctx());
 	camCBuf.set_PS(gfx.get_ctx());
-
-	//obj.exec();
-	//obj.disp();
 
 	lightning.disp();
 	//sphere.disp();
@@ -308,7 +305,6 @@ void loop() {
 		if (!quit) {
 			do_frame();
 		} else {
-			//obj.deinit();
 			gnomon.deinit();
 		}
 

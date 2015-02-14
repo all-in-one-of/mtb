@@ -6,7 +6,7 @@ struct ID3D11InputLayout;
 class cImgui : noncopyable {
 	cShader* mpVS = nullptr;
 	cShader* mpPS = nullptr;
-	ID3D11InputLayout* mpIL = nullptr;
+	com_ptr<ID3D11InputLayout> mpIL;
 	cTexture mFontTex;
 	cVertexBuffer mVtx;
 public:
