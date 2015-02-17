@@ -10,6 +10,9 @@ struct CTX {
 	float4 cpos;
 	float4 wpos;
 	float3 wnrm;
+	float3 wtgt;
+	float3 wbitgt;
+	float bitgtFlip;
 	float2 uv;
 	float3 base;
 	float3 diff;
@@ -23,7 +26,8 @@ struct CTX {
 
 sLightCtx set_light_ctx() {
 	sLightCtx lc = (sLightCtx)0;
-	lc.ldir = -float3(0, 0, -1);
+	//lc.ldir = -normalize(float3(0.1,-0.5, -1));
+	lc.ldir = -normalize(float3(0, 0, -1));
 	lc.lclr = float3(1, 1, 1) * 1.0;
 	return lc;
 }
@@ -33,8 +37,10 @@ CTX set_ctx(sPSModel pin) {
 	ctx.cpos = pin.cpos;
 	ctx.wpos = pin.wpos;
 	ctx.wnrm = normalize(pin.wnrm);
+	ctx.bitgtFlip = pin.wtgt.w;
+	ctx.wtgt = normalize(pin.wtgt.xyz);
+	ctx.wbitgt = normalize(pin.wbitgt);
 	ctx.uv   = pin.uv;
-	//ctx.nrm = pin.nrm;
 	ctx.base = float3(1, 1, 1);
 	ctx.diff = float3(0, 0, 0);
 	ctx.spec = float3(0, 0, 0);
@@ -111,10 +117,46 @@ CTX sample_base(CTX ctx) {
 	return ctx;
 }
 
+float3 pack_nrm(float3 nrm) {
+	return nrm * 0.5f + 0.5f;
+}
+
+float3 unpack_nmap_xy(float2 xy, float pwr) {
+	xy = xy * 2.0 - 1.0;
+	xy *= pwr;
+	float z = sqrt(1.0 - dot(xy, xy));
+	return normalize(float3(xy, z));
+}
+
+CTX apply_nmap(CTX ctx) 
+{
+	float3 nmap = g_meshNmapTex.Sample(g_meshNmapSmp, ctx.uv).rgb;
+
+	float3 tnrm = unpack_nmap_xy(nmap.rg, g_nmapPower);
+	
+	float3 wtgt = ctx.wtgt;
+	float3 wnrm = ctx.wnrm;
+
+#if 0 
+	float3 wbitgt = normalize(cross(wnrm, wtgt));
+	wbitgt *= ctx.bitgtFlip;
+#else
+	float3 wbitgt = ctx.wbitgt;
+#endif
+	
+	float3x3 wtbn =  float3x3(wtgt, wbitgt, wnrm);
+	wnrm = mul(tnrm, wtbn);
+	
+	ctx.wnrm = wnrm;
+
+	return ctx;
+}
+
 float4 main(sPSModel pin) : SV_TARGET
 {
 	CTX ctx = set_ctx(pin);
 	ctx = sample_base(ctx);
+	ctx = apply_nmap(ctx);
 	ctx = shade(ctx);
 	float4 clr = combine(ctx);
 	return clr;

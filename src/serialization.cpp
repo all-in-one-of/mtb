@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "math.hpp"
 #include "common.hpp"
 #include "rdr.hpp"
@@ -8,7 +10,24 @@
 #include <cereal/archives/json.hpp>
 #include <fstream>
 
-#define ARC(x) do { try { arc((x)); } catch (cereal::Exception& ex) { dbg_msg1(ex.what()); } } while(0)
+#define ARC(x) do { auto nvp = (x); try { arc(nvp); } catch (cereal::Exception& ex) { dbg_msg("%s: %s\n", nvp.name, ex.what()); } } while(0)
+#define ARCD(x, def) \
+	do { \
+		auto&& nvp = (x); \
+		try { arc(nvp); } \
+		catch (cereal::Exception& ex) { \
+			nvp.value = (def); \
+			dbg_msg("%s: %s\n", nvp.name, ex.what()); \
+		} \
+	} while(0)
+
+//template <class Archive, typename NVP>
+//void ARCD(Archive& arc, NVP&& nvp, typename NVP::Value const& defVal) try {
+//	arc(std::forward(nvp));
+//} catch (cereal::Exception& ex) {
+//	nvp.value = defVal;
+//	dbg_msg("%s: %s\n", nvp.name, ex.what());
+//}
 
 template <class Archive>
 void save(Archive& arc, DirectX::XMVECTOR const& m) {
@@ -28,11 +47,13 @@ template <class Archive>
 void sTestMtlCBuf::serialize(Archive& arc) {
 	ARC(CEREAL_NVP(fresnel));
 	ARC(CEREAL_NVP(shin));
+	ARCD(CEREAL_NVP(nmapPower), 1.0f);
 }
 
 template <class Archive>
 void sGroupMaterial::serialize(Archive& arc) {
 	ARC(CEREAL_NVP(texBaseName));
+	ARC(CEREAL_NVP(texNmapName));
 	ARC(CEREAL_NVP(params));
 }
 

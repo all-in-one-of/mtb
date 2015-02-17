@@ -14,7 +14,9 @@ inline constexpr float RAD2DEG(float rad) {
 struct vec3 {
 	DirectX::XMFLOAT3 mVal;
 };
-
+struct vec4 {
+	DirectX::XMFLOAT4 mVal;
+};
 
 template <typename T>
 struct tvec2 {

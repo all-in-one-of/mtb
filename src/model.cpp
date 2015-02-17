@@ -23,6 +23,18 @@ static vec2f as_vec2f(aiVector3D const& v) {
 	return {v.x, v.y};
 }
 
+static vec4 as_vec4(cHouGeoAttrib const* pa, int idx) {
+	float tmp[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	if (pa) {
+		float const* val = pa->get_float_val(idx);
+		for (int i = 0; i < 4 && i < pa->mAttribCount; ++i) {
+			tmp[i] = val[i];
+		}
+	}
+	return { { tmp[0], tmp[1], tmp[2], tmp[3] } };
+}
+
+
 static vec3 as_vec3(cHouGeoAttrib const* pa, int idx) {
 	float tmp[3] = { 0.0f, 0.0f, 0.0f };
 	if (pa) {
@@ -105,6 +117,12 @@ bool cModelData::load_hou_geo(cstr filepath) {
 		else if (attr.mName == "uv" && attr.mType == cHouGeoAttrib::E_TYPE_fpreal32) {
 			pUVAttr = &attr;
 		}
+		else if (attr.mName == "tangentu" && attr.mType == cHouGeoAttrib::E_TYPE_fpreal32) {
+			pTngUAttr = &attr;
+		}
+		else if (attr.mName == "tangentv" && attr.mType == cHouGeoAttrib::E_TYPE_fpreal32) {
+			pTngVAttr = &attr;
+		}
 	}
 
 	for (int vtx = 0; vtx < numVtx; ++vtx) {
@@ -112,6 +130,8 @@ bool cModelData::load_hou_geo(cstr filepath) {
 		pVtxItr->nrm = as_vec3(pNrmAttr, vtx);
 		pVtxItr->uv = as_vec2f(pUVAttr, vtx);
 		pVtxItr->uv.y = -pVtxItr->uv.y;
+		pVtxItr->tgt = as_vec4(pTngUAttr, vtx);
+		pVtxItr->bitgt = as_vec3(pTngVAttr, vtx);
 	
 		++pVtxItr;
 	}
@@ -290,6 +310,8 @@ bool cModel::init(cModelData const& mdlData, cModelMaterial& mtl) {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, nrm), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(sModelVtx, uv), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(sModelVtx, tgt), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, bitgt), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	auto pDev = get_gfx().get_dev();
 	auto& code = mpVS->get_code();
@@ -357,6 +379,7 @@ void cModel::dbg_ui() {
 
 			ImGui::SliderFloat3("F0", mtl.params.fresnel, 0.0f, 1.0f);
 			ImGui::SliderFloat("shin", &mtl.params.shin, 0.0f, 1000.0f);
+			ImGui::SliderFloat("nmapPower", &mtl.params.nmapPower, 0.0f, 2.0f);
 
 			ImGui::PopID();
 		}
@@ -364,17 +387,23 @@ void cModel::dbg_ui() {
 	if (ImGui::Button("Save")) {
 		mpMtl->save();
 	}
+	
 	ImGui::End();
 }
 
+static void apply_tex(ID3D11DeviceContext* pCtx, cTexture* pTex, ID3D11SamplerState* pSmp, uint32_t slot) {
+	if (pTex && pSmp) {
+		pTex->set_PS(pCtx, slot);
+		pCtx->PSSetSamplers(slot, 1, &pSmp);
+	}
+	else {
+		cTexture::set_null_PS(pCtx, slot);
+	}
+}
 
 void sGroupMtlRes::apply(ID3D11DeviceContext* pCtx) {
-	if (mTexBase.is_ready() && mpSmpBase) {
-		mTexBase.set_PS(pCtx, 0);
-		pCtx->PSSetSamplers(0, 1, &mpSmpBase);
-	} else {
-		cTexture::set_null_PS(pCtx, 0);
-	}
+	apply_tex(pCtx, mpTexBase, mpSmpBase, 0);
+	apply_tex(pCtx, mpTexNmap, mpSmpNmap, 1);
 }
 
 void sGroupMaterial::apply(ID3D11DeviceContext* pCtx) const {
@@ -412,14 +441,28 @@ bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, cstr fi
 		return false;
 	}
 
+	auto& ts = cTextureStorage::get();
+
 	for (uint32_t i = 0; i < grpNum; ++i) {
 		sGroupMaterial& mtl = mpGrpMtl[i];
 		sGroupMtlRes& res = mpGrpRes[i];
 
 		if (!mtl.texBaseName.empty()) {
-			if (res.mTexBase.load(pDev, mtl.texBaseName.c_str())) {
+			auto p = ts.load(pDev, mtl.texBaseName.c_str());
+			if (p) {
+				res.mpTexBase = p;
 				res.mpSmpBase = cSamplerStates::get().linear();
 			}
+		}
+
+		{
+			cTexture* p = nullptr;
+			if (!mtl.texNmapName.empty()) {
+				p = ts.load(pDev, mtl.texNmapName.c_str());
+			}
+			if (!p) { p = ts.get_def_nmap(); }
+			res.mpTexNmap = p;
+			res.mpSmpNmap = cSamplerStates::get().linear();
 		}
 	}
 

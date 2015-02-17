@@ -18,7 +18,8 @@ public:
 		return *this;
 	}
 
-	bool create2d1_rgba8(ID3D11Device* pDev, void* data, uint32_t w, uint32_t h);
+	bool create2d1_rgba_u8(ID3D11Device* pDev, void* data, uint32_t w, uint32_t h);
+	bool create2d1_rgba_f32(ID3D11Device* pDev, void* data, uint32_t w, uint32_t h);
 	bool load(ID3D11Device* pDev, cstr filepath);
 	void unload();
 
@@ -27,4 +28,24 @@ public:
 	void set_PS(ID3D11DeviceContext* pCtx, uint32_t slot);
 
 	static void set_null_PS(ID3D11DeviceContext* pCtx, uint32_t slot);
+};
+
+
+class cTextureStorage : noncopyable {
+	cTexture mDefNmap;
+
+	class cStorage;
+	cStorage* mpImpl;
+public:
+	static cTextureStorage& get();
+
+	cTextureStorage(ID3D11Device* pDev);
+	~cTextureStorage();
+
+	cTexture* load(ID3D11Device* pDev, cstr filepath);
+
+	cTexture* get_def_nmap() { return &mDefNmap; }
+
+protected:
+	void init_def_nmap(ID3D11Device* pDev);
 };

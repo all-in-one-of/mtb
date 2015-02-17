@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "math.hpp"
 #include "common.hpp"
 #include "texture.hpp"
@@ -105,7 +107,7 @@ void cImgui::load_fonts() {
 	int width, height;
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-	if (mFontTex.create2d1_rgba8(get_gfx().get_dev(), pixels, width, height)) {
+	if (mFontTex.create2d1_rgba_u8(get_gfx().get_dev(), pixels, width, height)) {
 		io.Fonts->TexID = (void*)&mFontTex;
 	}
 }

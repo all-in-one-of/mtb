@@ -82,6 +82,7 @@ struct sGlobals {
 	GlobalSingleton<cSDLWindow> win;
 	GlobalSingleton<cGfx> gfx;
 	GlobalSingleton<cShaderStorage> shaderStorage;
+	GlobalSingleton<cTextureStorage> textureStorage;
 	GlobalSingleton<cInputMgr> input;
 	GlobalSingleton<cCamera> camera;
 	GlobalSingleton<cConstBufStorage> cbufStorage;
@@ -105,6 +106,7 @@ cBlendStates& cBlendStates::get() { return globals.blendStates.get(); }
 cRasterizerStates& cRasterizerStates::get() { return globals.rasterizeStates.get(); }
 cDepthStencilStates& cDepthStencilStates::get() { return globals.depthStates.get(); }
 cImgui& cImgui::get() { return globals.imgui.get(); }
+cTextureStorage& cTextureStorage::get() { return globals.textureStorage.get(); }
 
 class cGnomon {
 	struct sVtx {
@@ -323,6 +325,7 @@ int main(int argc, char* argv[]) {
 	auto input = globals.input.ctor_scoped();
 	auto gfx = globals.gfx.ctor_scoped(globals.win.get().get_handle());
 	auto ss = globals.shaderStorage.ctor_scoped();
+	auto ts = globals.textureStorage.ctor_scoped(get_gfx().get_dev());
 	auto cbuf = globals.cbufStorage.ctor_scoped(get_gfx().get_dev());
 	auto smps = globals.samplerStates.ctor_scoped(get_gfx().get_dev());
 	auto blnds = globals.blendStates.ctor_scoped(get_gfx().get_dev());
