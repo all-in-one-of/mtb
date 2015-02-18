@@ -83,9 +83,9 @@ cImgui::cImgui(cGfx& gfx) {
 
 	mVtx.init_write_only(pDev, 10000, sizeof(sImguiVtx));
 
-	auto& ss = get_shader_storage();
-	mpVS = ss.create_VS(g_vtxShader);
-	mpPS = ss.create_PS(g_pixShader);
+	auto& ss = cShaderStorage::get();
+	mpVS = ss.create_VS(g_vtxShader, "imgui_vs");
+	mpPS = ss.create_PS(g_pixShader, "imgui_ps");
 
 	D3D11_INPUT_ELEMENT_DESC vdsc[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(sImguiVtx, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },

@@ -189,22 +189,27 @@ public:
 };
 
 class cBlendStates : noncopyable {
+	com_ptr<ID3D11BlendState> mpOpaque;
 	com_ptr<ID3D11BlendState> mpImgui;
 public:
 	static cBlendStates& get();
 
 	cBlendStates(ID3D11Device* pDev);
 
+	ID3D11BlendState* opaque() const { return mpOpaque; }
 	ID3D11BlendState* imgui() const { return mpImgui; }
 
+	void set_opaque(ID3D11DeviceContext* pCtx) const { set(pCtx, opaque()); }
 	void set_imgui(ID3D11DeviceContext* pCtx) const { set(pCtx, imgui()); }
 
 	static void set(ID3D11DeviceContext* pCtx, ID3D11BlendState* pState);
+	static D3D11_BLEND_DESC opaque_desc();
 	static D3D11_BLEND_DESC imgui_desc();
 };
 
 class cRasterizerStates : noncopyable {
 	com_ptr<ID3D11RasterizerState> mpDefault;
+	com_ptr<ID3D11RasterizerState> mpTwosided;
 	com_ptr<ID3D11RasterizerState> mpImgui;
 public:
 	static cRasterizerStates& get();
@@ -212,13 +217,16 @@ public:
 	cRasterizerStates(ID3D11Device* pDev);
 
 	ID3D11RasterizerState* def() const { return mpDefault; }
+	ID3D11RasterizerState* twosided() const { return mpTwosided; }
 	ID3D11RasterizerState* imgui() const { return mpImgui; }
 
 	void set_def(ID3D11DeviceContext* pCtx) const { set(pCtx, def()); }
+	void set_twosided(ID3D11DeviceContext* pCtx) const { set(pCtx, twosided()); }
 	void set_imgui(ID3D11DeviceContext* pCtx) const { set(pCtx, imgui()); }
 
 	static void set(ID3D11DeviceContext* pCtx, ID3D11RasterizerState* pState);
 	static D3D11_RASTERIZER_DESC default_desc();
+	static D3D11_RASTERIZER_DESC twosided_desc();
 	static D3D11_RASTERIZER_DESC imgui_desc();
 };
 

@@ -30,6 +30,10 @@ struct sPSModel {
 	float2 uv1 : TEXCOORD1;
 };
 
+struct sPSPredefined {
+	bool face : SV_IsFrontFace;
+};
+
 
 cbuffer Camera : register(b0) {
 	float4x4 g_viewProj;
@@ -51,12 +55,14 @@ cbuffer TestMtl : register(b2) {
 	float2 _pad;
 }
 
-Texture2D g_meshDiffTex : register(t0);
+Texture2D    g_meshDiffTex : register(t0);
 SamplerState g_meshDiffSmp : register(s0);
-Texture2D g_meshNmap0Tex : register(t1);
+Texture2D    g_meshNmap0Tex : register(t1);
 SamplerState g_meshNmap0Smp : register(s1);
-Texture2D g_meshNmap1Tex : register(t2);
+Texture2D    g_meshNmap1Tex : register(t2);
 SamplerState g_meshNmap1Smp : register(s2);
+Texture2D    g_meshMaskTex : register(t3);
+SamplerState g_meshMaskSmp : register(s3);
 
 static const float g_gamma = 2.2;
 

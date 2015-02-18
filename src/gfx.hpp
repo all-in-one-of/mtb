@@ -47,7 +47,7 @@ class cGfx : noncopyable {
 		com_ptr<ID3D11DepthStencilView> mpDSView;
 
 		sDepthStencilBuffer() {}
-		sDepthStencilBuffer(sDev& dev, UINT w, UINT h);
+		sDepthStencilBuffer(sDev& dev, UINT w, UINT h, DXGI_SAMPLE_DESC const& sampleDesc);
 		sDepthStencilBuffer& operator=(sDepthStencilBuffer&& o) {
 			mpTex = std::move(o.mpTex);
 			mpDSView = std::move(o.mpDSView);
@@ -107,25 +107,21 @@ public:
 
 
 class cShaderStorage {
-	std::vector<std::unique_ptr<cShader>> mShaders;
-
+	class cStorage;
+	cStorage* mpImpl;
 public:
-	cShaderStorage() {}
+	static cShaderStorage& get();
+
+	cShaderStorage();
+	~cShaderStorage();
 
 	cShader* load_VS(cstr filepath);
 	cShader* load_PS(cstr filepath);
 
-	cShader* create_VS(cstr code);
-	cShader* create_PS(cstr code);
-
-private:
-	cShader* create_VS(cShaderBytecode&& code);
-	cShader* create_PS(cShaderBytecode&& code);
-
-	cShader* put_shader(ID3D11DeviceChild* pShader, cShaderBytecode&& code);
+	cShader* create_VS(cstr code, cstr name);
+	cShader* create_PS(cstr code, cstr name);
 };
 
 
 cGfx& get_gfx();
-cShaderStorage& get_shader_storage();
 vec2i get_window_size();

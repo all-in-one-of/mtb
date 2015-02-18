@@ -181,7 +181,7 @@ bool cModelData::load_hou_geo(cstr filepath) {
 	mpGroups = std::move(pGroups);
 	mpGrpNames = std::move(pNames);
 
-	return false;
+	return true;
 }
 
 bool cModelData::load_assimp(cstr filepath) {
@@ -307,9 +307,8 @@ bool cModel::init(cModelData const& mdlData, cModelMaterial& mtl) {
 	mpData = &mdlData;
 	mpMtl = &mtl;
 
-	auto& ss = get_shader_storage();
-	mpVS = ss.load_VS("model_solid.vs.cso");
-	mpPS = ss.load_PS("model.ps.cso");
+	auto& ss = cShaderStorage::get();
+	auto pVS = ss.load_VS("model_solid.vs.cso");
 
 	D3D11_INPUT_ELEMENT_DESC vdsc[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -320,7 +319,7 @@ bool cModel::init(cModelData const& mdlData, cModelMaterial& mtl) {
 		{ "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(sModelVtx, uv1), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	auto pDev = get_gfx().get_dev();
-	auto& code = mpVS->get_code();
+	auto& code = pVS->get_code();
 	HRESULT hr = pDev->CreateInputLayout(vdsc, SIZEOF_ARRAY(vdsc), code.get_code(), code.get_size(), mpIL.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
 
@@ -350,8 +349,7 @@ void cModel::disp() {
 
 	pCtx->IASetInputLayout(mpIL);
 
-	pCtx->VSSetShader(mpVS->asVS(), nullptr, 0);
-	pCtx->PSSetShader(mpPS->asPS(), nullptr, 0);
+	cBlendStates::get().set_opaque(pCtx);
 
 	auto grpNum = mpData->mGrpNum;
 	for (uint32_t i = 0; i < grpNum; ++i) {
@@ -412,6 +410,12 @@ void sGroupMtlRes::apply(ID3D11DeviceContext* pCtx) {
 	apply_tex(pCtx, mpTexBase, mpSmpBase, 0);
 	apply_tex(pCtx, mpTexNmap0, mpSmpNmap0, 1);
 	apply_tex(pCtx, mpTexNmap1, mpSmpNmap1, 2);
+	apply_tex(pCtx, mpTexMask, mpSmpMask, 3);
+
+	pCtx->VSSetShader(mpVS->asVS(), nullptr, 0);
+	pCtx->PSSetShader(mpPS->asPS(), nullptr, 0);
+
+	cRasterizerStates::set(pCtx, mpRSState);
 }
 
 void sGroupMaterial::apply(ID3D11DeviceContext* pCtx) const {
@@ -452,31 +456,43 @@ bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, cstr fi
 	}
 
 	auto& ts = cTextureStorage::get();
+	auto& ss = cShaderStorage::get();
 
-	auto loadNmap = [&ts, pDev](std::string const& name, cTexture*& pTex, ID3D11SamplerState*& pSmp) {
+	auto loadTex = [&ts, pDev](std::string const& name, cTexture*& pTex, ID3D11SamplerState*& pSmp, cTexture* pDefT) {
 		cTexture* p = nullptr;
 		if (!name.empty()) {
 			p = ts.load(pDev, name.c_str());
 		}
-		if (!p) { p = ts.get_def_nmap(); }
+		if (!p) { p = pDefT; }
 		pTex = p;
 		pSmp = cSamplerStates::get().linear();
+	};
+	auto loadNmap = [&ts, pDev, &loadTex](std::string const& name, cTexture*& pTex, ID3D11SamplerState*& pSmp) {
+		loadTex(name, pTex, pSmp, ts.get_def_nmap());
+	};
+	auto loadClr = [&ts, pDev, &loadTex](std::string const& name, cTexture*& pTex, ID3D11SamplerState*& pSmp) {
+		loadTex(name, pTex, pSmp, ts.get_def_white());
 	};
 
 	for (uint32_t i = 0; i < grpNum; ++i) {
 		sGroupMaterial& mtl = mpGrpMtl[i];
 		sGroupMtlRes& res = mpGrpRes[i];
 
-		if (!mtl.texBaseName.empty()) {
-			auto p = ts.load(pDev, mtl.texBaseName.c_str());
-			if (p) {
-				res.mpTexBase = p;
-				res.mpSmpBase = cSamplerStates::get().linear();
-			}
-		}
-
+		loadClr(mtl.texBaseName, res.mpTexBase, res.mpSmpBase);
 		loadNmap(mtl.texNmap0Name, res.mpTexNmap0, res.mpSmpNmap0);
 		loadNmap(mtl.texNmap1Name, res.mpTexNmap1, res.mpSmpNmap1);
+		loadClr(mtl.texMaskName, res.mpTexMask, res.mpSmpMask);
+
+		res.mpVS = ss.load_VS(mtl.vsProg.c_str());
+		if (!res.mpVS) { return false; }
+		res.mpPS = ss.load_PS(mtl.psProg.c_str());
+		if (!res.mpPS) { return false; }
+
+		if (mtl.twosided) {
+			res.mpRSState = cRasterizerStates::get().twosided();
+		} else {
+			res.mpRSState = cRasterizerStates::get().def();
+		}
 	}
 
 	return true;

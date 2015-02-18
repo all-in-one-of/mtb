@@ -96,7 +96,7 @@ struct sGlobals {
 sGlobals globals;
 
 cGfx& get_gfx() { return globals.gfx.get(); }
-cShaderStorage& get_shader_storage() { return globals.shaderStorage.get(); }
+cShaderStorage& cShaderStorage::get() { return globals.shaderStorage.get(); }
 cInputMgr& get_input_mgr() { return globals.input.get(); }
 cCamera& get_camera() { return globals.camera.get(); }
 vec2i get_window_size() { return globals.win.get().get_window_size(); }
@@ -157,7 +157,7 @@ public:
 	}
 private:
 	void state_init() {
-		auto& ss = get_shader_storage();
+		auto& ss = cShaderStorage::get();
 		mpVS = ss.load_VS("simple.vs.cso");
 		mpPS = ss.load_PS("simple.ps.cso");
 
@@ -195,11 +195,13 @@ class cLightning {
 	cModelMaterial mMtl;
 public:
 
-	void init() {
+	bool init() {
 		//mdlData.load("../data/jill.obj");
-		mMdlData.load("../data/lightning.geo");
-		mMtl.load(get_gfx().get_dev(), mMdlData, "../data/lightning.mtl");
-		mModel.init(mMdlData, mMtl);
+		bool res = true;
+		res = res && mMdlData.load("../data/lightning.geo");
+		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, "../data/lightning.mtl");
+		res = res && mModel.init(mMdlData, mMtl);
+		return res;
 	}
 
 	void deinit() {

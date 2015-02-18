@@ -33,6 +33,7 @@ public:
 
 class cTextureStorage : noncopyable {
 	cTexture mDefNmap;
+	cTexture mDefWhite;
 
 	class cStorage;
 	cStorage* mpImpl;
@@ -45,7 +46,9 @@ public:
 	cTexture* load(ID3D11Device* pDev, cstr filepath);
 
 	cTexture* get_def_nmap() { return &mDefNmap; }
+	cTexture* get_def_white() { return &mDefWhite; }
 
 protected:
 	void init_def_nmap(ID3D11Device* pDev);
+	void init_def_white(ID3D11Device* pDev);
 };

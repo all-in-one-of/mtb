@@ -152,6 +152,7 @@ public:
 cTextureStorage::cTextureStorage(ID3D11Device* pDev) {
 	mpImpl = new cStorage;
 	init_def_nmap(pDev);
+	init_def_white(pDev);
 }
 
 cTextureStorage::~cTextureStorage() {
@@ -159,9 +160,17 @@ cTextureStorage::~cTextureStorage() {
 }
 
 void cTextureStorage::init_def_nmap(ID3D11Device* pDev) {
-	float rgba[4] = {0.5f, 0.5f, 1.0f, 1.0f};
-	mDefNmap.create2d1_rgba_f32(pDev, rgba, 1, 1);
+	//float rgba[4] = {0.5f, 0.5f, 1.0f, 1.0f};
+	//mDefNmap.create2d1_rgba_f32(pDev, rgba, 1, 1);
+	uint8_t rgba[4] = {128, 128, 255, 255};
+	mDefNmap.create2d1_rgba_u8(pDev, rgba, 1, 1);
 }
+
+void cTextureStorage::init_def_white(ID3D11Device* pDev) {
+	uint8_t rgba[4] = {255, 255, 255, 255};
+	mDefWhite.create2d1_rgba_u8(pDev, rgba, 1, 1);
+}
+
 
 cTexture* cTextureStorage::load(ID3D11Device* pDev, cstr filepath) {
 	return mpImpl->load(pDev, filepath);

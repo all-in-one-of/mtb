@@ -56,6 +56,10 @@ void sGroupMaterial::serialize(Archive& arc) {
 	ARC(CEREAL_NVP(texBaseName));
 	ARC(CEREAL_NVP(texNmap0Name));
 	ARC(CEREAL_NVP(texNmap1Name));
+	ARC(CEREAL_NVP(texMaskName));
+	ARC(CEREAL_NVP(vsProg));
+	ARC(CEREAL_NVP(psProg));
+	ARCD(CEREAL_NVP(twosided), false);
 	ARC(CEREAL_NVP(params));
 }
 

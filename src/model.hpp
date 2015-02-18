@@ -48,9 +48,13 @@ public:
 
 struct sGroupMaterial {
 	sTestMtlCBuf params;
+	std::string vsProg;
+	std::string psProg;
 	std::string texBaseName;
 	std::string texNmap0Name;
 	std::string texNmap1Name;
+	std::string texMaskName;
+	bool twosided;
 public:
 	void apply(ID3D11DeviceContext* pCtx) const;
 	void set_default();
@@ -66,6 +70,11 @@ struct sGroupMtlRes {
 	ID3D11SamplerState* mpSmpNmap0 = nullptr;
 	cTexture* mpTexNmap1 = nullptr;
 	ID3D11SamplerState* mpSmpNmap1 = nullptr;
+	cTexture* mpTexMask = nullptr;
+	ID3D11SamplerState* mpSmpMask = nullptr;
+	cShader* mpVS = nullptr;
+	cShader* mpPS = nullptr;
+	ID3D11RasterizerState* mpRSState = nullptr;
 
 	void apply(ID3D11DeviceContext* pCtx);
 };
@@ -93,7 +102,6 @@ public:
 
 	bool load(ID3D11Device* pDev, cModelData const& mdlData, cstr filepath);
 	bool save(cstr filepath = nullptr);
-	void unload();
 
 	cstr get_grp_name(uint32_t i) const { return mpMdlData->mpGrpNames[i].c_str(); }
 
@@ -106,8 +114,6 @@ class cModel {
 	cModelData const* mpData = nullptr;
 	cModelMaterial* mpMtl = nullptr;
 
-	cShader* mpVS = nullptr;
-	cShader* mpPS = nullptr;
 	com_ptr<ID3D11InputLayout> mpIL;
 
 public:

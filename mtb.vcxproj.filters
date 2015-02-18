@@ -88,9 +88,15 @@
     <FxCompile Include="hlsl\model.ps.hlsl">
       <Filter>hlsl</Filter>
     </FxCompile>
+    <FxCompile Include="hlsl\model.hair.ps.hlsl">
+      <Filter>hlsl</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="hlsl\shader.hlsli">
+      <Filter>hlsl</Filter>
+    </None>
+    <None Include="hlsl\material.hlsli">
       <Filter>hlsl</Filter>
     </None>
   </ItemGroup>

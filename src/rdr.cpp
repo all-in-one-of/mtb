@@ -3,6 +3,7 @@
 #include "common.hpp"
 #include "math.hpp"
 #include "rdr.hpp"
+#include "gfx.hpp"
 
 cBufferBase::cMapHandle::cMapHandle(ID3D11DeviceContext* pCtx, ID3D11Buffer* pBuf) : mpCtx(pCtx), mpBuf(pBuf), mMSR() {
 	HRESULT hr = pCtx->Map(pBuf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mMSR);
@@ -114,6 +115,8 @@ D3D11_SAMPLER_DESC cSamplerStates::linear_desc() {
 
 cBlendStates::cBlendStates(ID3D11Device* pDev) {
 	HRESULT hr;
+	hr = pDev->CreateBlendState(&opaque_desc(), mpOpaque.pp());
+	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBlendState opaque failed");
 	hr = pDev->CreateBlendState(&imgui_desc(), mpImgui.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBlendState imgui failed");
 }
@@ -121,6 +124,14 @@ cBlendStates::cBlendStates(ID3D11Device* pDev) {
 void cBlendStates::set(ID3D11DeviceContext* pCtx, ID3D11BlendState* pState) {
 	pCtx->OMSetBlendState(pState, nullptr, 0xFFFFFFFF);
 }
+
+D3D11_BLEND_DESC cBlendStates::opaque_desc() {
+	auto desc = D3D11_BLEND_DESC();
+	desc.RenderTarget[0].BlendEnable = false;
+	desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	return desc;
+}
+
 
 D3D11_BLEND_DESC cBlendStates::imgui_desc() {
 	auto desc = D3D11_BLEND_DESC();
@@ -141,6 +152,9 @@ cRasterizerStates::cRasterizerStates(ID3D11Device* pDev) {
 	hr = pDev->CreateRasterizerState(&default_desc(), mpDefault.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateRasterizerState default failed");
 
+	hr = pDev->CreateRasterizerState(&twosided_desc(), mpTwosided.pp());
+	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateRasterizerState twosided failed");
+
 	hr = pDev->CreateRasterizerState(&imgui_desc(), mpImgui.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateRasterizerState imgui failed");
 }
@@ -156,7 +170,19 @@ D3D11_RASTERIZER_DESC cRasterizerStates::default_desc() {
 	desc.FrontCounterClockwise = FALSE;
 	desc.DepthClipEnable = TRUE;
 	desc.ScissorEnable = FALSE;
-	desc.MultisampleEnable = FALSE;
+	desc.MultisampleEnable = TRUE;
+	desc.AntialiasedLineEnable = FALSE;
+	return desc;
+}
+
+D3D11_RASTERIZER_DESC cRasterizerStates::twosided_desc() {
+	auto desc = D3D11_RASTERIZER_DESC();
+	desc.FillMode = D3D11_FILL_SOLID;
+	desc.CullMode = D3D11_CULL_NONE;
+	desc.FrontCounterClockwise = FALSE;
+	desc.DepthClipEnable = TRUE;
+	desc.ScissorEnable = FALSE;
+	desc.MultisampleEnable = TRUE;
 	desc.AntialiasedLineEnable = FALSE;
 	return desc;
 }
