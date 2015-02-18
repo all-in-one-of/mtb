@@ -115,7 +115,7 @@ CTX noshade(CTX ctx) {
 	return ctx;
 }
 
-float4 combine(CTX ctx){
+float4 combine(CTX ctx) {
 	ctx.clr = ctx.base * ctx.diff + ctx.spec;
 
 	ctx.clr = ctx.clr * ctx.vclr.rgb;
