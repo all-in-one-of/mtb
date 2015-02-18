@@ -14,6 +14,7 @@ struct CTX {
 	float3 wbitgt;
 	float bitgtFlip;
 	float2 uv;
+	float2 uv1;
 	float3 base;
 	float3 diff;
 	float3 spec;
@@ -41,6 +42,7 @@ CTX set_ctx(sPSModel pin) {
 	ctx.wtgt = normalize(pin.wtgt.xyz);
 	ctx.wbitgt = normalize(pin.wbitgt);
 	ctx.uv   = pin.uv;
+	ctx.uv1  = pin.uv1;
 	ctx.base = float3(1, 1, 1);
 	ctx.diff = float3(0, 0, 0);
 	ctx.spec = float3(0, 0, 0);
@@ -128,11 +130,26 @@ float3 unpack_nmap_xy(float2 xy, float pwr) {
 	return normalize(float3(xy, z));
 }
 
+// See: http://blog.selfshadow.com/publications/blending-in-detail/
+float3 blend_nmap_whiteout(float3 n0, float3 n1) {
+	return normalize(float3(n0.xy + n1.xy, n0.z*n1.z));
+}
+
+float3 blend_nmap_ff13(float3 n0, float3 n1) {
+	return normalize(n0 * n1.z + float3(n1.xy, 0));
+}
+
 CTX apply_nmap(CTX ctx) 
 {
-	float3 nmap = g_meshNmapTex.Sample(g_meshNmapSmp, ctx.uv).rgb;
+	float3 nmap0 = g_meshNmap0Tex.Sample(g_meshNmap0Smp, ctx.uv).rgb;
+	float3 nmap1 = g_meshNmap1Tex.Sample(g_meshNmap1Smp, ctx.uv1).rgb;
 
-	float3 tnrm = unpack_nmap_xy(nmap.rg, g_nmapPower);
+	float3 n0 = unpack_nmap_xy(nmap0.rg, g_nmap0Power);
+	float3 n1 = unpack_nmap_xy(nmap1.rg, g_nmap1Power);
+	//float3 n1 = float3(0, 0, 1);
+
+	float3 tnrm = blend_nmap_whiteout(n0, n1);
+	//float3 tnrm = blend_nmap_ff13(n0, n1);
 	
 	float3 wtgt = ctx.wtgt;
 	float3 wnrm = ctx.wnrm;

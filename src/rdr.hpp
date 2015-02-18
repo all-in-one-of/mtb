@@ -7,6 +7,7 @@ struct sModelVtx {
 	vec2f uv;
 	vec4 tgt;
 	vec3 bitgt;
+	vec2f uv1;
 };
 
 struct sCameraCBuf {
@@ -27,9 +28,10 @@ struct sImguiCameraCBuf {
 struct sTestMtlCBuf {
 	float fresnel[3];
 	float shin;
-	float nmapPower;
+	float nmap0Power;
+	float nmap1Power;
 	
-	float pad[3];
+	float pad[2];
 
 	template <class Archive>
 	void serialize(Archive& arc);

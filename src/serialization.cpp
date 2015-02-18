@@ -47,13 +47,15 @@ template <class Archive>
 void sTestMtlCBuf::serialize(Archive& arc) {
 	ARC(CEREAL_NVP(fresnel));
 	ARC(CEREAL_NVP(shin));
-	ARCD(CEREAL_NVP(nmapPower), 1.0f);
+	ARCD(CEREAL_NVP(nmap0Power), 1.0f);
+	ARCD(CEREAL_NVP(nmap1Power), 1.0f);
 }
 
 template <class Archive>
 void sGroupMaterial::serialize(Archive& arc) {
 	ARC(CEREAL_NVP(texBaseName));
-	ARC(CEREAL_NVP(texNmapName));
+	ARC(CEREAL_NVP(texNmap0Name));
+	ARC(CEREAL_NVP(texNmap1Name));
 	ARC(CEREAL_NVP(params));
 }
 

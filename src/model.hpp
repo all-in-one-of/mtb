@@ -49,7 +49,8 @@ public:
 struct sGroupMaterial {
 	sTestMtlCBuf params;
 	std::string texBaseName;
-	std::string texNmapName;
+	std::string texNmap0Name;
+	std::string texNmap1Name;
 public:
 	void apply(ID3D11DeviceContext* pCtx) const;
 	void set_default();
@@ -61,8 +62,10 @@ public:
 struct sGroupMtlRes {
 	cTexture* mpTexBase = nullptr;
 	ID3D11SamplerState* mpSmpBase = nullptr;
-	cTexture* mpTexNmap = nullptr;
-	ID3D11SamplerState* mpSmpNmap = nullptr;
+	cTexture* mpTexNmap0 = nullptr;
+	ID3D11SamplerState* mpSmpNmap0 = nullptr;
+	cTexture* mpTexNmap1 = nullptr;
+	ID3D11SamplerState* mpSmpNmap1 = nullptr;
 
 	void apply(ID3D11DeviceContext* pCtx);
 };

@@ -17,6 +17,7 @@ struct sVSModelSolid {
 	float2 uv : TEXCOORD;
 	float4 tgt : TANGENT;
 	float3 bitgt : BITANGENT;
+	float2 uv1 : TEXCOORD1;
 };
 
 struct sPSModel {
@@ -26,6 +27,7 @@ struct sPSModel {
 	float2 uv : TEXCOORD;
 	float4 wtgt : TANGENT;
 	float3 wbitgt : BITANGENT;
+	float2 uv1 : TEXCOORD1;
 };
 
 
@@ -43,15 +45,18 @@ cbuffer Mesh : register(b1) {
 cbuffer TestMtl : register(b2) {
 	float3 g_fresnel;
 	float g_shin;
-	float g_nmapPower;
+	float g_nmap0Power;
+	float g_nmap1Power;
 
-	float3 _pad;
+	float2 _pad;
 }
 
 Texture2D g_meshDiffTex : register(t0);
 SamplerState g_meshDiffSmp : register(s0);
-Texture2D g_meshNmapTex : register(t1);
-SamplerState g_meshNmapSmp : register(s1);
+Texture2D g_meshNmap0Tex : register(t1);
+SamplerState g_meshNmap0Smp : register(s1);
+Texture2D g_meshNmap1Tex : register(t2);
+SamplerState g_meshNmap1Smp : register(s2);
 
 static const float g_gamma = 2.2;
 
