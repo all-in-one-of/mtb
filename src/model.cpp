@@ -106,6 +106,7 @@ bool cModelData::load_hou_geo(cstr filepath) {
 	cHouGeoAttrib const* pTngUAttr = nullptr;
 	cHouGeoAttrib const* pTngVAttr = nullptr;
 	cHouGeoAttrib const* pUV1Attr = nullptr;
+	cHouGeoAttrib const* pCdAttr = nullptr;
 
 	for (int i = 0; i < geo.mPointAttribCount; ++i) {
 		auto const& attr = geo.mpPointAttribs[i];
@@ -127,6 +128,9 @@ bool cModelData::load_hou_geo(cstr filepath) {
 		else if (attr.mName == "uv1" && attr.mType == cHouGeoAttrib::E_TYPE_fpreal32) {
 			pUV1Attr = &attr;
 		}
+		else if (attr.mName == "Cd" && attr.mType == cHouGeoAttrib::E_TYPE_fpreal32) {
+			pCdAttr = &attr;
+		}
 	}
 
 	for (int vtx = 0; vtx < numVtx; ++vtx) {
@@ -138,6 +142,7 @@ bool cModelData::load_hou_geo(cstr filepath) {
 		pVtxItr->bitgt = as_vec3(pTngVAttr, vtx);
 		pVtxItr->uv1 = as_vec2f(pUV1Attr, vtx);
 		pVtxItr->uv1.y = -pVtxItr->uv1.y;
+		pVtxItr->clr = as_vec3(pCdAttr, vtx);
 		++pVtxItr;
 	}
 
@@ -317,6 +322,7 @@ bool cModel::init(cModelData const& mdlData, cModelMaterial& mtl) {
 		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(sModelVtx, tgt), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, bitgt), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(sModelVtx, uv1), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, clr), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	auto pDev = get_gfx().get_dev();
 	auto& code = pVS->get_code();

@@ -21,4 +21,5 @@ void main(sVSModelSolid vin, out sPSModel vout)
 	vout.wtgt = float4(wtgt, vin.tgt.w);
 	vout.wbitgt = wbitgt;
 	vout.uv1 = vin.uv1;
+	vout.clr = float4(vin.clr, 1);
 }

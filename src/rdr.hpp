@@ -8,6 +8,7 @@ struct sModelVtx {
 	vec4 tgt;
 	vec3 bitgt;
 	vec2f uv1;
+	vec3 clr;
 };
 
 struct sCameraCBuf {

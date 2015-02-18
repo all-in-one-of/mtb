@@ -18,6 +18,7 @@ struct sVSModelSolid {
 	float4 tgt : TANGENT;
 	float3 bitgt : BITANGENT;
 	float2 uv1 : TEXCOORD1;
+	float3 clr : COLOR;
 };
 
 struct sPSModel {
@@ -28,6 +29,7 @@ struct sPSModel {
 	float4 wtgt : TANGENT;
 	float3 wbitgt : BITANGENT;
 	float2 uv1 : TEXCOORD1;
+	float4 clr : COLOR;
 };
 
 struct sPSPredefined {

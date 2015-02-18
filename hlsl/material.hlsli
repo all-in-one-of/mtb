@@ -15,11 +15,13 @@ struct CTX {
 	float bitgtFlip;
 	float2 uv;
 	float2 uv1;
+	float4 vclr;
 	float3 base;
 	float3 diff;
 	float3 spec;
 	float  alpha;
 	float3 clr;
+	
 	float3 mask;
 	float  face; // 1 = front, -1 = back
 
@@ -44,6 +46,8 @@ CTX set_ctx(sPSModel pin) {
 	ctx.wbitgt = normalize(pin.wbitgt);
 	ctx.uv   = pin.uv;
 	ctx.uv1  = pin.uv1;
+	ctx.vclr = pin.clr;
+
 	ctx.base = float3(1, 1, 1);
 	ctx.diff = float3(0, 0, 0);
 	ctx.spec = float3(0, 0, 0);
@@ -113,8 +117,10 @@ CTX noshade(CTX ctx) {
 
 float4 combine(CTX ctx){
 	ctx.clr = ctx.base * ctx.diff + ctx.spec;
-	//ctx.clr = ctx.spec;
 
+	ctx.clr = ctx.clr * ctx.vclr.rgb;
+	ctx.alpha *= ctx.vclr.a;
+	
 	ctx.clr = pow(ctx.clr, 1.0 / g_gamma);
 
 	return float4(ctx.clr, ctx.alpha);
