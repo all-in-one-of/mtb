@@ -1,0 +1,118 @@
+{
+    "value0": {
+        "grp:eye": {
+            "texBaseName": "../data/lightning_tex/eye_base.dds",
+            "texNmap0Name": "",
+            "texNmap1Name": "",
+            "texMaskName": "",
+            "vsProg": "model_solid.vs.cso",
+            "psProg": "model.ps.cso",
+            "twosided": false,
+            "params": {
+                "fresnel": {
+                    "value0": 0.012000000104308128,
+                    "value1": 0.012000000104308128,
+                    "value2": 0.012000000104308128
+                },
+                "shin": 851.7440185546875,
+                "nmap0Power": 1,
+                "nmap1Power": 1
+            }
+        },
+        "grp:necklace": {
+            "texBaseName": "../data/lightning_tex/necklace_base.dds",
+            "texNmap0Name": "../data/lightning_tex/necklace_nrm.dds",
+            "texNmap1Name": "",
+            "texMaskName": "",
+            "vsProg": "model_solid.vs.cso",
+            "psProg": "model.ps.cso",
+            "twosided": false,
+            "params": {
+                "fresnel": {
+                    "value0": 0.02500000037252903,
+                    "value1": 0.02500000037252903,
+                    "value2": 0.02500000037252903
+                },
+                "shin": 9.25,
+                "nmap0Power": 1,
+                "nmap1Power": 1
+            }
+        },
+        "grp:hair": {
+            "texBaseName": "../data/lightning_tex/hair_base.dds",
+            "texNmap0Name": "",
+            "texNmap1Name": "",
+            "texMaskName": "../data/lightning_tex/hair_mask.dds",
+            "vsProg": "model_solid.vs.cso",
+            "psProg": "model.hair.ps.cso",
+            "twosided": true,
+            "params": {
+                "fresnel": {
+                    "value0": 0.081000000238418579,
+                    "value1": 0.081000000238418579,
+                    "value2": 0.081000000238418579
+                },
+                "shin": 430.2330322265625,
+                "nmap0Power": 1,
+                "nmap1Power": 1
+            }
+        },
+        "grp:cloth": {
+            "texBaseName": "../data/lightning_tex/cloth_base.dds",
+            "texNmap0Name": "../data/lightning_tex/cloth_nrm.dds",
+            "texNmap1Name": "../data/lightning_tex/cloth_nrm1.dds",
+            "texMaskName": "",
+            "vsProg": "model_solid.vs.cso",
+            "psProg": "model.ps.cso",
+            "twosided": false,
+            "params": {
+                "fresnel": {
+                    "value0": 0.16300000250339508,
+                    "value1": 0.16300000250339508,
+                    "value2": 0.16300000250339508
+                },
+                "shin": 892.4420166015625,
+                "nmap0Power": 1,
+                "nmap1Power": 0.04700000211596489
+            }
+        },
+        "grp:sword": {
+            "texBaseName": "../data/lightning_tex/sword_base.dds",
+            "texNmap0Name": "../data/lightning_tex/sword_nrm.dds",
+            "texNmap1Name": "",
+            "texMaskName": "",
+            "vsProg": "model_solid.vs.cso",
+            "psProg": "model.ps.cso",
+            "twosided": false,
+            "params": {
+                "fresnel": {
+                    "value0": 0.035000000149011612,
+                    "value1": 0.035000000149011612,
+                    "value2": 0.035000000149011612
+                },
+                "shin": 26.163002014160156,
+                "nmap0Power": 1,
+                "nmap1Power": 0
+            }
+        },
+        "grp:skin": {
+            "texBaseName": "../data/lightning_tex/skin_base.dds",
+            "texNmap0Name": "../data/lightning_tex/skin_nrm.dds",
+            "texNmap1Name": "../data/lightning_tex/skin_nrm1.dds",
+            "texMaskName": "",
+            "vsProg": "model_solid.vs.cso",
+            "psProg": "model.ps.cso",
+            "twosided": false,
+            "params": {
+                "fresnel": {
+                    "value0": 0.038000002503395081,
+                    "value1": 0.038000002503395081,
+                    "value2": 0.038000002503395081
+                },
+                "shin": 1.906999945640564,
+                "nmap0Power": 1,
+                "nmap1Power": 1
+            }
+        }
+    }
+}
