@@ -55,7 +55,16 @@ cbuffer TestMtl : register(b2) {
 	float g_nmap1Power;
 
 	float2 _pad;
-}
+};
+
+#define MAX_LIGHTS 8
+cbuffer Light : register(b3) {
+	float3 g_lightPos[MAX_LIGHTS];
+	float3 g_lightClr[MAX_LIGHTS];
+	float3 g_lightDir[MAX_LIGHTS];
+	bool   g_lightIsEnabled[MAX_LIGHTS];
+	//float  attn[]
+};
 
 Texture2D    g_meshDiffTex : register(t0);
 SamplerState g_meshDiffSmp : register(s0);

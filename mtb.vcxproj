@@ -262,6 +262,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="hlsl\light.hlsli" />
     <None Include="hlsl\material.hlsli" />
     <None Include="hlsl\shader.hlsli" />
   </ItemGroup>

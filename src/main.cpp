@@ -341,6 +341,24 @@ int main(int argc, char* argv[]) {
 	lightning.init();
 	//sphere.init();
 
+	auto& l = cConstBufStorage::get().mLightCBuf;
+	::memset(&l.mData, 0, sizeof(l.mData));
+	
+	l.mData.pos[0] = dx::XMVectorSet(0, 0, 1, 1);
+	l.mData.clr[0] = dx::XMVectorSet(1, 1, 1, 1);
+	l.mData.isEnabled[0] = true;
+	
+	l.mData.pos[1] = dx::XMVectorSet(0, 1, -1, 1);
+	l.mData.clr[1] = dx::XMVectorSet(1, 1, 1, 1);
+	l.mData.isEnabled[1] = true;
+
+	l.mData.pos[2] = dx::XMVectorSet(0, 3, 0, 1);
+	l.mData.clr[2] = dx::XMVectorSet(1, 1, 1, 1);
+	l.mData.isEnabled[2] = true;
+
+	l.update(get_gfx().get_ctx());
+	l.set_PS(get_gfx().get_ctx()); 
+
 	loop();
 
 	return 0;

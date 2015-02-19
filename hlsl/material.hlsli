@@ -1,11 +1,3 @@
-#include "shader.hlsli"
-
-struct sLightCtx {
-	float3 lpos;
-	float3 ldir;
-	float3 lclr;
-};
-
 struct CTX {
 	float4 cpos;
 	float4 wpos;
@@ -21,23 +13,16 @@ struct CTX {
 	float3 spec;
 	float  alpha;
 	float3 clr;
-	
 	float3 mask;
 	float  face; // 1 = front, -1 = back
-
-	sLightCtx lctx;
+	float3 viewDir;
 };
 
-sLightCtx set_light_ctx() {
-	sLightCtx lc = (sLightCtx)0;
-	//lc.ldir = -normalize(float3(0.1,-0.5, -1));
-	lc.ldir = -normalize(float3(0, 0, -1));
-	lc.lclr = float3(1, 1, 1) * 1.0;
-	return lc;
-}
+#include "shader.hlsli"
+#include "light.hlsli"
 
 CTX set_ctx(sPSModel pin) {
-	CTX ctx = (CTX)0;
+	CTX ctx;
 	ctx.cpos = pin.cpos;
 	ctx.wpos = pin.wpos;
 	ctx.wnrm = normalize(pin.wnrm);
@@ -55,7 +40,7 @@ CTX set_ctx(sPSModel pin) {
 	ctx.clr = float3(0, 0, 0);
 	ctx.mask = float3(1, 1, 1);
 
-	ctx.lctx = set_light_ctx();
+	ctx.viewDir = normalize(g_camPos - ctx.wpos).xyz;
 	return ctx;
 }
 
@@ -69,46 +54,38 @@ float3 fresnel(float3 f0, float HL) {
 	return f0 + (1 - f0) * pow(1 - HL, 5);
 }
 
-float3 lambert_brdf(float3 c) {
-	//return c / PI;
-	return c;
+float3 lambert_brdf() {
+	//return float3(1, 1, 1) / PI;
+	return float3(1, 1, 1);
 }
 
-float3 phong_brdf(float3 c, float RV, float shin) {
-	return c * pow(RV, shin);
+float3 phong_brdf(float RV, float shin) {
+	return pow(RV, shin);
 }
 
-float3 blinn_phong_brdf(float3 c, float HN, float shin) {
-	return c * pow(HN, shin);
+float3 blinn_phong_brdf(float HN, float shin) {
+	return pow(HN, shin);
 }
 
 CTX shade(CTX ctx) {
-	float3 N = ctx.wnrm;
-	float3 L = ctx.lctx.ldir;
-	float3 R = reflect(-L, N);
-	float LN = saturate(dot(L, N));
-
-	float3 V = normalize(g_camPos - ctx.wpos).xyz;
-	float3 H = normalize(V + L);
-		
-	float HN = saturate(dot(H, N));
-	float HV = saturate(dot(H, V));
-	float HL = saturate(dot(H, L));
-	float RV = saturate(dot(R, V));
+	//LightParam lp;
+	//lp.pos = float3(1, 0, 1);
+	//lp.clr = float3(1, 1, 1) * 2;
 
 	float shin = g_shin;
 	float3 f0 = g_fresnel.xyz;
-	//float3 f0 = g_fresnel.xxx;
 
-	ctx.diff += lambert_brdf(ctx.lctx.lclr) * LN;
-	//ctx.spec += /*ctx.lctx.lclr * pow(max(0.001, HN), shin) * */fresnel(F0, HV)/* * LN*/;
-	//ctx.spec = fresnel(f0, HL) * LN;
-	//ctx.spec = V;
-	//ctx.spec = phong_brdf(ctx.lctx.lclr, RV, shin) * LN;
-	ctx.spec = blinn_phong_brdf(ctx.lctx.lclr, HN, shin) * fresnel(f0, HL) * LN;
+	for (int i = 0; i < 4; ++i) {
+		if (!g_lightIsEnabled[i]) break;
+		LightParam lp = get_light_param(i);
+		LightInfo info = get_light_info_omni(ctx, lp);
 
+		ctx.diff += lambert_brdf() * info.clrDiff * info.LN;
+		ctx.spec += blinn_phong_brdf(info.HN, shin) * fresnel(f0, info.HL) * info.clrSpec * info.LN;
+	}
 	return ctx;
 }
+
 
 CTX noshade(CTX ctx) {
 	ctx.diff = float3(1, 1, 1);

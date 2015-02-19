@@ -99,5 +99,8 @@
     <None Include="hlsl\material.hlsli">
       <Filter>hlsl</Filter>
     </None>
+    <None Include="hlsl\light.hlsli">
+      <Filter>hlsl</Filter>
+    </None>
   </ItemGroup>
 </Project>

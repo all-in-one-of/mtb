@@ -26,6 +26,23 @@ struct sImguiCameraCBuf {
 	DirectX::XMMATRIX proj;
 };
 
+struct sLightCBuf {
+	struct Bool {
+		uint32_t val;
+		uint32_t pad[3];
+
+		Bool() = default;
+		Bool(bool v) : val(v) {}
+		operator bool() { return !!val; }
+	};
+	enum {MAX_LIGHTS = 8};
+
+	DirectX::XMVECTOR pos[MAX_LIGHTS];
+	DirectX::XMVECTOR clr[MAX_LIGHTS];
+	DirectX::XMVECTOR dir[MAX_LIGHTS];
+	Bool isEnabled[MAX_LIGHTS];
+};
+
 struct sTestMtlCBuf {
 	float fresnel[3];
 	float shin;
@@ -165,12 +182,14 @@ public:
 	cConstBufferSlotted<sMeshCBuf, 1> mMeshCBuf;
 	cConstBufferSlotted<sImguiCameraCBuf, 0> mImguiCameraCBuf;
 	cConstBufferSlotted<sTestMtlCBuf, 2> mTestMtlCBuf;
+	cConstBufferSlotted<sLightCBuf, 3> mLightCBuf;
 
 	cConstBufStorage(ID3D11Device* pDev) {
 		mCameraCBuf.init(pDev);
 		mMeshCBuf.init(pDev);
 		mImguiCameraCBuf.init(pDev);
 		mTestMtlCBuf.init(pDev);
+		mLightCBuf.init(pDev);
 	}
 
 	static cConstBufStorage& get();
