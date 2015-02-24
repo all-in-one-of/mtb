@@ -359,7 +359,7 @@ bool cModel::init(cModelData const& mdlData, cModelMaterial& mtl) {
 	};
 	auto pDev = get_gfx().get_dev();
 	auto& code = pVS->get_code();
-	HRESULT hr = pDev->CreateInputLayout(vdsc, SIZEOF_ARRAY(vdsc), code.get_code(), code.get_size(), mpIL.pp());
+	HRESULT hr = pDev->CreateInputLayout(vdsc, LENGTHOF_ARRAY(vdsc), code.get_code(), code.get_size(), mpIL.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
 
 	return true;

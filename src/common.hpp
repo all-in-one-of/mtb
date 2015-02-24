@@ -2,9 +2,9 @@
 #include <algorithm>
 #include <type_traits>
 
-template <std::size_t N> struct type_of_size_helper { typedef char type[N]; };
-template <typename T, std::size_t Size> typename type_of_size_helper<Size>::type& sizeof_for_static_arrays_helper(T(&)[Size]);
-#define SIZEOF_ARRAY(pArray) sizeof(sizeof_for_static_arrays_helper(pArray))
+template <std::size_t N> struct type_of_lenght_helper { typedef char type[N]; };
+template <typename T, std::size_t Size> typename type_of_lenght_helper<Size>::type& lenghtof_for_static_arrays_helper(T(&)[Size]);
+#define LENGTHOF_ARRAY(pArray) sizeof(lenghtof_for_static_arrays_helper(pArray))
 
 
 struct noncopyable {

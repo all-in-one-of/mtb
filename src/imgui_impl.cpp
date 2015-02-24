@@ -94,7 +94,7 @@ cImgui::cImgui(cGfx& gfx) {
 	};
 
 	auto& code = mpVS->get_code();
-	HRESULT hr = pDev->CreateInputLayout(vdsc, SIZEOF_ARRAY(vdsc), code.get_code(), code.get_size(), mpIL.pp());
+	HRESULT hr = pDev->CreateInputLayout(vdsc, LENGTHOF_ARRAY(vdsc), code.get_code(), code.get_size(), mpIL.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
 
 	load_fonts();
@@ -127,11 +127,11 @@ void cImgui::update() {
 	auto& input = get_input_mgr();
 
 	io.MousePos = as_ImVec2(input.mMousePos);
-	for (int i = 0; i < cInputMgr::EMBLAST && i < SIZEOF_ARRAY(io.MouseDown); ++i) {
+	for (int i = 0; i < cInputMgr::EMBLAST && i < LENGTHOF_ARRAY(io.MouseDown); ++i) {
 		io.MouseDown[i] = input.mbtn_state((cInputMgr::eMouseBtn)i);
 	}
 
-	for (int i = 0; i < cInputMgr::KEYS_COUNT && i < SIZEOF_ARRAY(io.KeysDown); ++i) {
+	for (int i = 0; i < cInputMgr::KEYS_COUNT && i < LENGTHOF_ARRAY(io.KeysDown); ++i) {
 		io.KeysDown[i] = input.kbtn_state(i);
 	}
 	io.KeyCtrl = input.kmod_state(KMOD_CTRL);

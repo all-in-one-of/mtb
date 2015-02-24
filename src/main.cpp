@@ -167,7 +167,7 @@ private:
 		};
 		auto pDev = get_gfx().get_dev();
 		auto& code = mpVS->get_code();
-		HRESULT hr = pDev->CreateInputLayout(vdsc, SIZEOF_ARRAY(vdsc), code.get_code(), code.get_size(), mpIL.pp());
+		HRESULT hr = pDev->CreateInputLayout(vdsc, LENGTHOF_ARRAY(vdsc), code.get_code(), code.get_size(), mpIL.pp());
 		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
 
 		sVtx vtx[6] = {
@@ -179,7 +179,7 @@ private:
 			{ 0.0f, 0.0f, 1.0f, 0.0, 0.0f, 1.0f, 1.0f },
 		};
 
-		mVtxBuf.init(pDev, vtx, SIZEOF_ARRAY(vtx), sizeof(vtx[0]));
+		mVtxBuf.init(pDev, vtx, LENGTHOF_ARRAY(vtx), sizeof(vtx[0]));
 	}
 
 	void state_deinit() {
