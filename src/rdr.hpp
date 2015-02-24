@@ -41,6 +41,8 @@ struct sLightCBuf {
 	DirectX::XMVECTOR clr[MAX_LIGHTS];
 	DirectX::XMVECTOR dir[MAX_LIGHTS];
 	Bool isEnabled[MAX_LIGHTS];
+
+	DirectX::XMVECTOR sh[7];
 };
 
 struct sTestMtlCBuf {

@@ -220,10 +220,12 @@ class cSphere {
 	cModelMaterial mMtl;
 public:
 
-	void init() {
-		mMdlData.load("../data/sphere.obj");
-		mMtl.load(get_gfx().get_dev(), mMdlData, nullptr);
-		mModel.init(mMdlData, mMtl);
+	bool init() {
+		bool res = true;
+		res = res && mMdlData.load("../data/sphere.obj");
+		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, nullptr);
+		res = res && mModel.init(mMdlData, mMtl);
+		return res;
 	}
 
 	void deinit() {
@@ -232,13 +234,14 @@ public:
 	}
 
 	void disp() {
+		mModel.dbg_ui();
 		mModel.disp();
 	}
 };
 
 cGnomon gnomon;
 cLightning lightning;
-//cSphere sphere;
+cSphere sphere;
 
 cTrackballCam trackballCam;
 
@@ -321,6 +324,53 @@ void loop() {
 }
 
 
+struct sSHCoef {
+	static int get_idx(int l, int m) { return l * (l + 1) + m; }
+
+	struct sSHChan {
+		float mSH[9];
+
+		float operator()(int l, int m) const { return mSH[get_idx(l, m)]; }
+		float operator[](int idx) const { return mSH[idx]; }
+	};
+
+	sSHChan mR;
+	sSHChan mG;
+	sSHChan mB;
+};
+
+// See "Stupid Spherical Harmonics (SH) Tricks" by Peter-Pike Sloan, Appendix A10
+void pack_sh_param(sSHCoef::sSHChan const& chan, DirectX::XMVECTOR sh[7], int idx) {
+	static const float spi = (float)sqrt(M_PI);
+	const float C0 = 1.0f / (2.0f * spi);
+	const float C1 = sqrtf(3.0f) / (3.0f * spi);
+	const float C2 = sqrtf(15.0f) / (8.0f  * spi);
+	const float C3 = sqrtf(5.0f) / (16.0f * spi);
+	const float C4 = 0.5f * C2;
+
+	dx::XMVECTOR mul1 = dx::XMVectorSet(-C1, -C1, C1, C0);
+	dx::XMVECTOR mul2 = dx::XMVectorSet(C2, -C2, 3.0f * C3, -C2);
+
+	dx::XMVECTOR v = dx::XMVectorSet(chan[3], chan[1], chan[2], chan[0]);
+	v = dx::XMVectorMultiply(v, mul1);
+	v.m128_f32[3] -= C3 * chan[6];
+	sh[idx] = v;
+
+	v = dx::XMVectorSet(chan[4], chan[5], chan[6], chan[7]);
+	v = dx::XMVectorMultiply(v, mul2);
+	sh[idx + 3] = v;
+
+	sh[6].m128_f32[idx] = C4*chan[8];
+}
+
+void pack_sh_param(sSHCoef const& coef, DirectX::XMVECTOR sh[7]) {
+	pack_sh_param(coef.mR, sh, 0);
+	pack_sh_param(coef.mG, sh, 1);
+	pack_sh_param(coef.mB, sh, 2);
+	sh[6].m128_f32[3] = 1.0f;
+}
+
+
 int main(int argc, char* argv[]) {
 	cSDLInit sdl;
 	auto win = globals.win.ctor_scoped("TestBed", 1200, 900, 0);
@@ -339,13 +389,14 @@ int main(int argc, char* argv[]) {
 	trackballCam.init(get_camera());
 
 	lightning.init();
-	//sphere.init();
+	sphere.init();
 
-	auto& l = cConstBufStorage::get().mLightCBuf;
+	auto& l = cConstBufStorage::get().mLightCBuf; 
 	::memset(&l.mData, 0, sizeof(l.mData));
 	
 	l.mData.pos[0] = dx::XMVectorSet(0, 0, 1, 1);
 	l.mData.clr[0] = dx::XMVectorSet(1, 1, 1, 1);
+	l.mData.clr[0] = dx::XMVectorScale(l.mData.clr[0], 1.0f);
 	l.mData.isEnabled[0] = true;
 	
 	l.mData.pos[1] = dx::XMVectorSet(0, 1, -1, 1);
@@ -355,6 +406,19 @@ int main(int argc, char* argv[]) {
 	l.mData.pos[2] = dx::XMVectorSet(0, 3, 0, 1);
 	l.mData.clr[2] = dx::XMVectorSet(1, 1, 1, 1);
 	l.mData.isEnabled[2] = true;
+
+	sSHCoef sh;
+	sh.mR = {{ 3.783264f, -2.887813f, 0.3790306f, -1.033029f, 
+		0.623285f, -0.07800784f, -0.9355605f, -0.5741177f, 
+		0.2033477f }};
+	sh.mG = {{4.260424f, -3.586802f, 0.2952161f, -1.031689f,
+		0.5558126f, 0.1486536f, -1.25426f, -0.5034486f,
+		-0.0442012f}};
+	sh.mB = {{4.504587f, -4.147052f, 0.09856746f, -0.8849242f,
+		0.3977577f, 0.47249f, -1.52563f, -0.3643064f,
+		-0.4521801f}};
+
+	pack_sh_param(sh, l.mData.sh);
 
 	l.update(get_gfx().get_ctx());
 	l.set_PS(get_gfx().get_ctx()); 

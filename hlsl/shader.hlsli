@@ -64,6 +64,8 @@ cbuffer Light : register(b3) {
 	float3 g_lightDir[MAX_LIGHTS];
 	bool   g_lightIsEnabled[MAX_LIGHTS];
 	//float  attn[]
+
+	float4 g_lightSH[7];
 };
 
 Texture2D    g_meshDiffTex : register(t0);

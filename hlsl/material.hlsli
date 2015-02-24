@@ -21,6 +21,11 @@ struct CTX {
 #include "shader.hlsli"
 #include "light.hlsli"
 
+float3 pack_nrm(float3 nrm) {
+	return nrm * 0.5f + 0.5f;
+}
+
+
 CTX set_ctx(sPSModel pin) {
 	CTX ctx;
 	ctx.cpos = pin.cpos;
@@ -67,6 +72,10 @@ float3 blinn_phong_brdf(float HN, float shin) {
 	return pow(HN, shin);
 }
 
+float3 blinn_phong_nrm_brdf(float HN, float shin) {
+	return ((shin + 2) / 8)* pow(HN, shin);
+}
+
 CTX shade(CTX ctx) {
 	//LightParam lp;
 	//lp.pos = float3(1, 0, 1);
@@ -81,8 +90,12 @@ CTX shade(CTX ctx) {
 		LightInfo info = get_light_info_omni(ctx, lp);
 
 		ctx.diff += lambert_brdf() * info.clrDiff * info.LN;
-		ctx.spec += blinn_phong_brdf(info.HN, shin) * fresnel(f0, info.HL) * info.clrSpec * info.LN;
+		//ctx.spec += blinn_phong_brdf(info.HN, shin) * fresnel(f0, info.HL) * info.clrSpec * info.LN;
+		ctx.spec += blinn_phong_nrm_brdf(info.HN, shin) * fresnel(f0, info.HL) * info.clrSpec * info.LN;
 	}
+
+	ctx.diff += get_light_sh(ctx.wnrm);
+
 	return ctx;
 }
 
@@ -120,10 +133,6 @@ CTX do_alphatest(CTX ctx, float tres) {
 	if (ctx.alpha <= tres)
 		discard;
 	return ctx;
-}
-
-float3 pack_nrm(float3 nrm) {
-	return nrm * 0.5f + 0.5f;
 }
 
 float3 unpack_nmap_xy(float2 xy, float pwr) {

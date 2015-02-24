@@ -45,3 +45,29 @@ LightParam get_light_param(int i) {
 
 	return lp;
 }
+
+
+// See "Stupid Spherical Harmonics (SH) Tricks" by Peter-Pike Sloan, Appendix A10
+float3 get_light_sh(float4 SH[7], float3 wnrm) {
+	float4 N = float4(wnrm, 1);
+
+	float3 x1, x2, x3;
+	x1.r = dot(SH[0], N);
+	x1.g = dot(SH[1], N);
+	x1.b = dot(SH[2], N);
+
+	float4 NN = N.xyzz * N.yzzx;
+	x2.r = dot(SH[3], NN);
+	x2.g = dot(SH[4], NN);
+	x2.b = dot(SH[5], NN);
+
+	float c = N.x * N.x - N.y * N.y;
+	x3 = SH[6].rgb * c;
+
+	return x1 + x2 + x3;
+}
+
+float3 get_light_sh(float3 wnrm) {
+	return get_light_sh(g_lightSH, wnrm);
+}
+

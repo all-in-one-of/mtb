@@ -15,13 +15,19 @@
 #include <imgui.h>
 
 
-
+static vec4 as_vec4_1(aiVector3D const& v) {
+	return { { v.x, v.y, v.z, 1.0f } };
+}
 static vec3 as_vec3(aiVector3D const& v) {
 	return { { v.x, v.y, v.z } };
 }
 static vec2f as_vec2f(aiVector3D const& v) {
 	return {v.x, v.y};
 }
+static vec3 as_vec3(aiColor4D const& v) {
+	return { { v.r, v.g, v.b } };
+}
+
 
 static vec4 as_vec4(cHouGeoAttrib const* pa, int idx) {
 	float tmp[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -189,6 +195,28 @@ bool cModelData::load_hou_geo(cstr filepath) {
 	return true;
 }
 
+template <typename T>
+struct sReadItr {
+	T const* mpItr;
+	int mStep;
+
+	sReadItr(T const* p, T const* pDef) {
+		if (p) {
+			mpItr = p;
+			mStep = 1;
+		} else {
+			mpItr = pDef;
+			mStep = 0;
+		}
+	}
+
+	T const& read() {
+		T const& res = *mpItr;
+		mpItr += mStep;
+		return res;
+	}
+};
+
 bool cModelData::load_assimp(cstr filepath) {
 	Assimp::Importer importer;
 
@@ -232,6 +260,12 @@ bool cModelData::load_assimp(cstr filepath) {
 	auto pGrpItr = pGroups.get();
 	auto pNamesItr = pNames.get();
 
+	const aiColor4D defColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+	const aiVector3D defV3Zero = { 0.0f, 0.0f, 0.0f };
+	const aiVector3D defTgt = { 1.0f, 0.0f, 0.0f };
+	const aiVector3D defBitgt = { 0.0f, 1.0f, 0.0f };
+	const aiVector3D defNrm = { 0.0f, 0.0f, 1.0f };
+
 	for (auto& mi : meshes) {
 		aiMesh* pMesh = mi.mpMesh;
 
@@ -239,25 +273,24 @@ bool cModelData::load_assimp(cstr filepath) {
 		auto pIdxGrpStart = pIdxItr;
 
 		const int meshVtx = pMesh->mNumVertices;
-		aiVector3D const* pAIVtx = pMesh->mVertices;
-		aiVector3D const* pAINrm = pMesh->mNormals;
-		aiVector3D const* pAITex = pMesh->mTextureCoords[0];
+
+		sReadItr<aiVector3D> posItr(pMesh->mVertices, &defV3Zero);
+		sReadItr<aiVector3D> nrmItr(pMesh->mNormals, &defNrm);
+		sReadItr<aiVector3D> uvItr(pMesh->mTextureCoords[0], &defV3Zero);
+		sReadItr<aiVector3D> tgtItr(nullptr, &defTgt);
+		sReadItr<aiVector3D> bitgtItr(nullptr, &defBitgt);
+		sReadItr<aiVector3D> uv1Itr(nullptr, &defV3Zero);
+		sReadItr<aiColor4D> clrItr(pMesh->mColors[0], &defColor);
 
 		for (int vtx = 0; vtx < meshVtx; ++vtx) {
-			pVtxItr->pos = as_vec3(*pAIVtx);
-			++pAIVtx;
-
-			pVtxItr->nrm = as_vec3(*pAINrm);
-			++pAINrm;
-
-			if (pAITex) {
-				pVtxItr->uv = as_vec2f(*pAITex);
-				pVtxItr->uv.y = -pVtxItr->uv.y;
-				++pAITex;
-			} else {
-				pVtxItr->uv = { 0.0f, 0.0f };
-			}
-
+			pVtxItr->pos = as_vec3(posItr.read());
+			pVtxItr->nrm = as_vec3(nrmItr.read());
+			pVtxItr->uv = as_vec2f(uvItr.read());
+			pVtxItr->uv.y = -pVtxItr->uv.y;
+			pVtxItr->tgt = as_vec4_1(tgtItr.read());
+			pVtxItr->bitgt = as_vec3(bitgtItr.read());
+			pVtxItr->uv1 = as_vec2f(uv1Itr.read());
+			pVtxItr->clr = as_vec3(clrItr.read());
 			++pVtxItr;
 		}
 
@@ -473,6 +506,10 @@ void sGroupMaterial::set_default() {
 	params.shin = 9.25f;
 	params.nmap0Power = 1.0f;
 	params.nmap1Power = 0.0f;
+
+	twosided = false;
+	vsProg = "model_solid.vs.cso";
+	psProg = "model.ps.cso";
 }
 
 
@@ -488,7 +525,7 @@ bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, cstr fi
 		for (uint32_t i = 0; i < grpNum; ++i) {
 			mpGrpMtl[i].set_default();
 		}
-		return false;
+		//return true;
 	}
 
 	auto& ts = cTextureStorage::get();
