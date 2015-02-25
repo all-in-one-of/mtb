@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectXTK_Desktop_2013", "3
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "imgui_lib_vs2013", "3rd_party\imgui\imgui_lib_vs2013.vcxproj", "{851BE1C7-B9C2-45BC-B172-DF7641F05E8A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sh_envmap", "tools\sh_envmap\sh_envmap.vcxproj", "{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -55,6 +57,18 @@ Global
 		{851BE1C7-B9C2-45BC-B172-DF7641F05E8A}.Release|Win32.Build.0 = Release|Win32
 		{851BE1C7-B9C2-45BC-B172-DF7641F05E8A}.Release|x64.ActiveCfg = Release|x64
 		{851BE1C7-B9C2-45BC-B172-DF7641F05E8A}.Release|x64.Build.0 = Release|x64
+		{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}.Debug|Win32.ActiveCfg = Debug|Win32
+		{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}.Debug|Win32.Build.0 = Debug|Win32
+		{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}.Debug|x64.ActiveCfg = Debug|x64
+		{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}.Debug|x64.Build.0 = Debug|x64
+		{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}.Release|Win32.ActiveCfg = Release|Win32
+		{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}.Release|Win32.Build.0 = Release|Win32
+		{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}.Release|x64.ActiveCfg = Release|x64
+		{17AC40B9-1FD9-4C6D-869D-E17D6640FC26}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

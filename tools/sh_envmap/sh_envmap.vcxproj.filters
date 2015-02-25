@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="hdritools">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sh_envmap.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="hdritools\rgbe.cpp">
+      <Filter>hdritools</Filter>
+    </ClCompile>
+    <ClCompile Include="hdritools\RgbeIO.cpp">
+      <Filter>hdritools</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="hdritools\Exception.h">
+      <Filter>hdritools</Filter>
+    </ClInclude>
+    <ClInclude Include="hdritools\RgbeIO.h">
+      <Filter>hdritools</Filter>
+    </ClInclude>
+    <ClInclude Include="hdritools\RgbeIOPrivate.h">
+      <Filter>hdritools</Filter>
+    </ClInclude>
+    <ClInclude Include="hdritools\Vec4f.h">
+      <Filter>hdritools</Filter>
+    </ClInclude>
+    <ClInclude Include="hdritools\Vec4i.h">
+      <Filter>hdritools</Filter>
+    </ClInclude>
+    <ClInclude Include="hdritools\ImageIO.h">
+      <Filter>hdritools</Filter>
+    </ClInclude>
+    <ClInclude Include="hdritools\rgbe.h">
+      <Filter>hdritools</Filter>
+    </ClInclude>
+    <ClInclude Include="hdritools\Rgb32F.h">
+      <Filter>hdritools</Filter>
+    </ClInclude>
+    <ClInclude Include="hdritools\StdAfx.h">
+      <Filter>hdritools</Filter>
+    </ClInclude>
+    <ClInclude Include="hdritools\Rgba32F.h">
+      <Filter>hdritools</Filter>
+    </ClInclude>
+    <ClInclude Include="hdritools\Image.h">
+      <Filter>hdritools</Filter>
+    </ClInclude>
+    <ClInclude Include="hdritools\rgbeLUT.h">
+      <Filter>hdritools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\sh.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\common.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\math.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
