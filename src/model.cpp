@@ -19,13 +19,13 @@ static vec4 as_vec4_1(aiVector3D const& v) {
 	return { { v.x, v.y, v.z, 1.0f } };
 }
 static vec3 as_vec3(aiVector3D const& v) {
-	return { { v.x, v.y, v.z } };
+	return { v.x, v.y, v.z };
 }
 static vec2f as_vec2f(aiVector3D const& v) {
 	return {v.x, v.y};
 }
 static vec3 as_vec3(aiColor4D const& v) {
-	return { { v.r, v.g, v.b } };
+	return { v.r, v.g, v.b };
 }
 
 
@@ -49,7 +49,7 @@ static vec3 as_vec3(cHouGeoAttrib const* pa, int idx) {
 			tmp[i] = val[i];
 		}
 	}
-	return { { tmp[0], tmp[1], tmp[2] } };
+	return { tmp[0], tmp[1], tmp[2] };
 }
 
 static vec2f as_vec2f(cHouGeoAttrib const* pa, int idx) {

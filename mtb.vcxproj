@@ -197,6 +197,7 @@
     <ClInclude Include="src\rdr.hpp" />
     <ClInclude Include="src\common.hpp" />
     <ClInclude Include="src\gfx.hpp" />
+    <ClInclude Include="src\sh.hpp" />
     <ClInclude Include="src\texture.hpp" />
   </ItemGroup>
   <ItemGroup>

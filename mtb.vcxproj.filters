@@ -39,6 +39,9 @@
     <ClInclude Include="src\hou_geo.hpp">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\sh.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">

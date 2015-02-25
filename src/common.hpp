@@ -130,7 +130,7 @@ struct aligned_storage {
 
 template <typename T>
 class GlobalSingleton {
-	using Storage = typename aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
+	using Storage = typename ::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
 	Storage mData;
 public:
 	struct sScope : noncopyable {
