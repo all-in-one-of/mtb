@@ -40,6 +40,17 @@ static vec4 as_vec4(cHouGeoAttrib const* pa, int idx) {
 	return { { tmp[0], tmp[1], tmp[2], tmp[3] } };
 }
 
+static vec4i as_vec4i(cHouGeoAttrib const* pa, int idx) {
+	int32_t tmp[4] = { 0, 0, 0, 0 };
+	if (pa) {
+		int32_t const* val = pa->get_int32_val(idx);
+		for (int i = 0; i < 4 && i < pa->mAttribCount; ++i) {
+			tmp[i] = val[i];
+		}
+	}
+	return{ { tmp[0], tmp[1], tmp[2], tmp[3] } };
+}
+
 
 static vec3 as_vec3(cHouGeoAttrib const* pa, int idx) {
 	float tmp[3] = { 0.0f, 0.0f, 0.0f };
@@ -113,6 +124,8 @@ bool cModelData::load_hou_geo(cstr filepath) {
 	cHouGeoAttrib const* pTngVAttr = nullptr;
 	cHouGeoAttrib const* pUV1Attr = nullptr;
 	cHouGeoAttrib const* pCdAttr = nullptr;
+	cHouGeoAttrib const* pJIdxAttr = nullptr;
+	cHouGeoAttrib const* pJWgtAttr = nullptr;
 
 	for (int i = 0; i < geo.mPointAttribCount; ++i) {
 		auto const& attr = geo.mpPointAttribs[i];
@@ -137,6 +150,12 @@ bool cModelData::load_hou_geo(cstr filepath) {
 		else if (attr.mName == "Cd" && attr.mType == cHouGeoAttrib::E_TYPE_fpreal32) {
 			pCdAttr = &attr;
 		}
+		else if (attr.mName == "jidx" && attr.mType == cHouGeoAttrib::E_TYPE_int32) {
+			pJIdxAttr = &attr;
+		}
+		else if (attr.mName == "jwgt" && attr.mType == cHouGeoAttrib::E_TYPE_fpreal32) {
+			pJWgtAttr = &attr;
+		}
 	}
 
 	for (int vtx = 0; vtx < numVtx; ++vtx) {
@@ -149,6 +168,8 @@ bool cModelData::load_hou_geo(cstr filepath) {
 		pVtxItr->uv1 = as_vec2f(pUV1Attr, vtx);
 		pVtxItr->uv1.y = -pVtxItr->uv1.y;
 		pVtxItr->clr = as_vec3(pCdAttr, vtx);
+		pVtxItr->jidx = as_vec4i(pJIdxAttr, vtx);
+		pVtxItr->jwgt = as_vec4(pJWgtAttr, vtx);
 		++pVtxItr;
 	}
 
@@ -356,11 +377,15 @@ bool cModel::init(cModelData const& mdlData, cModelMaterial& mtl) {
 		{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, bitgt), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(sModelVtx, uv1), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sModelVtx, clr), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BLENDINDEX", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, offsetof(sModelVtx, jidx), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(sModelVtx, jwgt), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	auto pDev = get_gfx().get_dev();
 	auto& code = pVS->get_code();
 	HRESULT hr = pDev->CreateInputLayout(vdsc, LENGTHOF_ARRAY(vdsc), code.get_code(), code.get_size(), mpIL.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
+
+	mWmtx = DirectX::XMMatrixIdentity();
 
 	return true;
 }
@@ -382,7 +407,8 @@ void cModel::disp() {
 	//meshCBuf.mData.wmtx = dx::XMMatrixIdentity();
 	//meshCBuf.mData.wmtx = DirectX::XMMatrixTranslation(0, 0, 0);
 	//meshCBuf.mData.wmtx = DirectX::XMMatrixRotationY(DEG2RAD(180));
-	meshCBuf.mData.wmtx = DirectX::XMMatrixScaling(0.3f, 0.3f, 0.3f);
+	//meshCBuf.mData.wmtx = DirectX::XMMatrixScaling(0.3f, 0.3f, 0.3f);
+	meshCBuf.mData.wmtx = mWmtx;
 	meshCBuf.update(pCtx);
 	meshCBuf.set_VS(pCtx);
 

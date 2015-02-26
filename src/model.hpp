@@ -117,7 +117,7 @@ class cModel {
 	com_ptr<ID3D11InputLayout> mpIL;
 
 public:
-	
+	DirectX::XMMATRIX mWmtx;
 	
 	cModel() {}
 	~cModel() {}

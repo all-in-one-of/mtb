@@ -9,6 +9,8 @@ struct sModelVtx {
 	vec3 bitgt;
 	vec2f uv1;
 	vec3 clr;
+	vec4i jidx;
+	vec4 jwgt;
 };
 
 struct sCameraCBuf {
@@ -55,6 +57,11 @@ struct sTestMtlCBuf {
 
 	template <class Archive>
 	void serialize(Archive& arc);
+};
+
+struct sSkinCBuf {
+	enum { MAX_SKIN_MTX = 32 };
+	DirectX::XMMATRIX skin[MAX_SKIN_MTX];
 };
 
 class cBufferBase : noncopyable {
@@ -185,6 +192,7 @@ public:
 	cConstBufferSlotted<sImguiCameraCBuf, 0> mImguiCameraCBuf;
 	cConstBufferSlotted<sTestMtlCBuf, 2> mTestMtlCBuf;
 	cConstBufferSlotted<sLightCBuf, 3> mLightCBuf;
+	cConstBufferSlotted<sSkinCBuf, 4> mSkinCBuf;
 
 	cConstBufStorage(ID3D11Device* pDev) {
 		mCameraCBuf.init(pDev);
@@ -192,6 +200,7 @@ public:
 		mImguiCameraCBuf.init(pDev);
 		mTestMtlCBuf.init(pDev);
 		mLightCBuf.init(pDev);
+		mSkinCBuf.init(pDev);
 	}
 
 	static cConstBufStorage& get();

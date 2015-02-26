@@ -6,24 +6,20 @@
 #include "common.hpp"
 #include "hou_geo.hpp"
 
-#include <SDL_rwops.h>
+#include "json_helpers.hpp"
 
-
-#include <cereal/external/rapidjson/document.h>
-#include <cereal/external/rapidjson/filestream.h>
-
-#define CHECK_SCHEMA(x, msg, ...) do { if (!(x)) { dbg_msg(msg, __VA_ARGS__); return false; } } while(0)
-
-using Document = rapidjson::Document;
-using Value = Document::ValueType;
-using Size = rapidjson::SizeType;
+using nJsonHelpers::Document;
+using nJsonHelpers::Value;
+using nJsonHelpers::Size;
 
 class cLoaderImpl {
 	cHouGeoLoader& mOwner;
 public:
 	cLoaderImpl(cHouGeoLoader& loader) : mOwner(loader) {}
 
-	bool load(Value const& doc) {
+	bool operator()(Value const& doc) {
+		CHECK_SCHEMA(doc.IsArray(), "doc is not array\n");
+
 		auto arrSize = doc.Size();
 		for (Size i = 0; i < arrSize; i += 2) {
 			cstr key;
@@ -454,28 +450,8 @@ protected:
 
 
 bool cHouGeoLoader::load(cstr filepath) {
-	auto rw = SDL_RWFromFile(filepath, "rb");
-	Sint64 size = SDL_RWsize(rw);
-	if (size <= 0) {
-		SDL_RWclose(rw);
-		return false;
-	}
-	auto pdata = std::make_unique<char[]>(size + 1);
-	SDL_RWread(rw, pdata.get(), size, 1);
-	SDL_RWclose(rw);
-	pdata[size] = 0;
-	
-
-	Document document;
-	char* json = pdata.get();
-	if (document.ParseInsitu<0>(json).HasParseError()) {
-		dbg_msg("cHouGeoLoader::load(): error parsing json: %s\n%d", document.GetParseError());
-		return false;
-	}
-	CHECK_SCHEMA(document.IsArray(), "doc is not array\n");
-
 	cLoaderImpl loader(*this);
-	if (!loader.load(document)) {
+	if (!nJsonHelpers::load_file(filepath, loader)) {
 		return false;
 	}
 

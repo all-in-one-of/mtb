@@ -181,9 +181,12 @@
     <ClCompile Include="src\hou_geo.cpp" />
     <ClCompile Include="src\imgui_impl.cpp" />
     <ClCompile Include="src\input.cpp" />
+    <ClCompile Include="src\json_helpers.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\math.cpp" />
     <ClCompile Include="src\model.cpp" />
     <ClCompile Include="src\rdr.cpp" />
+    <ClCompile Include="src\rig.cpp" />
     <ClCompile Include="src\serialization.cpp" />
     <ClCompile Include="src\texture.cpp" />
   </ItemGroup>
@@ -192,11 +195,13 @@
     <ClInclude Include="src\hou_geo.hpp" />
     <ClInclude Include="src\imgui_impl.hpp" />
     <ClInclude Include="src\input.hpp" />
+    <ClInclude Include="src\json_helpers.hpp" />
     <ClInclude Include="src\math.hpp" />
     <ClInclude Include="src\model.hpp" />
     <ClInclude Include="src\rdr.hpp" />
     <ClInclude Include="src\common.hpp" />
     <ClInclude Include="src\gfx.hpp" />
+    <ClInclude Include="src\rig.hpp" />
     <ClInclude Include="src\sh.hpp" />
     <ClInclude Include="src\texture.hpp" />
   </ItemGroup>
@@ -260,6 +265,20 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Fc $(OutDir)%(Filename).cso.lst %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/Fc $(OutDir)%(Filename).cso.lst %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/Fc $(OutDir)%(Filename).cso.lst %(AdditionalOptions)</AdditionalOptions>
+    </FxCompile>
+    <FxCompile Include="hlsl\model_skin.vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Fc $(OutDir)%(Filename).cso.lst %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/Fc $(OutDir)%(Filename).cso.lst %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Fc $(OutDir)%(Filename).cso.lst %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/Fc $(OutDir)%(Filename).cso.lst %(AdditionalOptions)</AdditionalOptions>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

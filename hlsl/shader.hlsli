@@ -10,8 +10,7 @@ struct sPSSimple{
 	float4 clr : COLOR0;
 };
 
-
-struct sVSModelSolid {
+struct sVSModel {
 	float3 pos : POSITION;
 	float3 nrm : NORMAL;
 	float2 uv : TEXCOORD;
@@ -19,6 +18,8 @@ struct sVSModelSolid {
 	float3 bitgt : BITANGENT;
 	float2 uv1 : TEXCOORD1;
 	float3 clr : COLOR;
+	int4   jidx : BLENDINDEX;
+	float4 jwgt : BLENDWEIGHT;
 };
 
 struct sPSModel {
@@ -67,6 +68,11 @@ cbuffer Light : register(b3) {
 
 	float4 g_lightSH[7];
 };
+
+#define MAX_SKIN_MTX 32
+cbuffer Skin : register(b4) {
+	float4x4 g_skin[MAX_SKIN_MTX];
+}
 
 Texture2D    g_meshDiffTex : register(t0);
 SamplerState g_meshDiffSmp : register(s0);

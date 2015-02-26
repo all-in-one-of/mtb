@@ -17,6 +17,9 @@ struct vec3 {
 struct vec4 {
 	DirectX::XMFLOAT4 mVal;
 };
+struct vec4i {
+	DirectX::XMINT4 mVal;
+};
 
 template <typename T>
 struct tvec2 {
@@ -94,4 +97,8 @@ using vec2f = tvec2 < float >;
 template <typename T>
 T clamp(T x, T min, T max) {
 	return std::max(min, std::min(x, max));
+}
+
+namespace nMtx {
+extern const DirectX::XMMATRIX g_Identity;
 }

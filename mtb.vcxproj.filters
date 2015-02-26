@@ -42,6 +42,12 @@
     <ClInclude Include="src\sh.hpp">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\rig.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\json_helpers.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -77,6 +83,15 @@
     <ClCompile Include="src\hou_geo.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\rig.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\json_helpers.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\math.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="hlsl\simple.vs.hlsl">
@@ -92,6 +107,9 @@
       <Filter>hlsl</Filter>
     </FxCompile>
     <FxCompile Include="hlsl\model.hair.ps.hlsl">
+      <Filter>hlsl</Filter>
+    </FxCompile>
+    <FxCompile Include="hlsl\model_skin.vs.hlsl">
       <Filter>hlsl</Filter>
     </FxCompile>
   </ItemGroup>

@@ -8,3 +8,4 @@ obj/
 data/lightning_tex/
 *.nvuser
 ipch/
+tools/backup/

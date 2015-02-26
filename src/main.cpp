@@ -10,6 +10,7 @@
 #include "rdr.hpp"
 #include "texture.hpp"
 #include "model.hpp"
+#include "rig.hpp"
 #include "input.hpp"
 #include "camera.hpp"
 #include "imgui_impl.hpp"
@@ -202,6 +203,9 @@ public:
 		res = res && mMdlData.load("../data/lightning.geo");
 		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, "../data/lightning.mtl");
 		res = res && mModel.init(mMdlData, mMtl);
+
+		//mModel.mWmtx = DirectX::XMMatrixScaling(0.3f, 0.3f, 0.3f);
+
 		return res;
 	}
 
@@ -226,6 +230,9 @@ public:
 		res = res && mMdlData.load("../data/sphere.obj");
 		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, nullptr);
 		res = res && mModel.init(mMdlData, mMtl);
+
+		//mModel.mWmtx = DirectX::XMMatrixScaling(0.3f, 0.3f, 0.3f);
+
 		return res;
 	}
 
@@ -240,9 +247,86 @@ public:
 	}
 };
 
+class cOwl {
+	cModel mModel;
+	cModelData mMdlData;
+	cModelMaterial mMtl;
+	cRigData mRigData;
+	cRig mRig;
+public:
+
+	bool init() {
+		bool res = true;
+		//res = res && mMdlData.load("../data/owl.geo");
+		res = res && mMdlData.load("w:/houdini/reversed/cot/c116_ev.pak/test.geo");
+		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, "../data/owl.mtl");
+		res = res && mModel.init(mMdlData, mMtl);
+
+		mRigData.load("w:/houdini/reversed/cot/c116_ev.pak/test.rig");
+		mRig.init(&mRigData);
+
+		float scl = 0.01f;
+		mModel.mWmtx = DirectX::XMMatrixScaling(scl, scl, scl);
+
+		auto pRootJnt = mRig.get_joint(0);
+		if (pRootJnt) {
+			pRootJnt->set_parent_mtx(&mModel.mWmtx);
+		}
+
+		auto pHeadJnt = mRig.find_joint("j_002");
+		if (pHeadJnt) {
+			auto& mtx = pHeadJnt->get_local_mtx();
+			auto r3 = mtx.r[3];
+			mtx = DirectX::XMMatrixRotationY(DEG2RAD(90));
+			mtx.r[3] = r3;
+		}
+
+		auto pLegJnt = mRig.find_joint("j_201");
+		if (pLegJnt) {
+			auto& mtx = pLegJnt->get_local_mtx();
+			auto r3 = mtx.r[3];
+			mtx = DirectX::XMMatrixRotationX(DEG2RAD(-58));
+			mtx.r[3] = r3;
+		}
+
+		auto pWing1Jnt = mRig.find_joint("j_011");
+		if (pWing1Jnt) {
+			auto& mtx = pWing1Jnt->get_local_mtx();
+			auto r3 = mtx.r[3];
+			mtx = DirectX::XMMatrixRotationZ(DEG2RAD(61));
+			mtx.r[3] = r3;
+		}
+
+		auto pWing2Jnt = mRig.find_joint("j_015");
+		if (pWing2Jnt) {
+			auto& mtx = pWing2Jnt->get_local_mtx();
+			auto r3 = mtx.r[3];
+			mtx = DirectX::XMMatrixRotationZ(DEG2RAD(-36));
+			mtx.r[3] = r3;
+		}
+
+		return res;
+	}
+
+	void deinit() {
+		mModel.deinit();
+		mMdlData.unload();
+	}
+
+	void disp() {
+		mRig.calc_local();
+		mRig.calc_world();
+		mRig.upload_skin(get_gfx().get_ctx());
+
+		mModel.dbg_ui();
+		mModel.disp();
+	}
+};
+
 cGnomon gnomon;
 cLightning lightning;
 cSphere sphere;
+cOwl owl;
 
 cTrackballCam trackballCam;
 
@@ -272,8 +356,9 @@ void do_frame() {
 	camCBuf.set_VS(gfx.get_ctx());
 	camCBuf.set_PS(gfx.get_ctx());
 
-	lightning.disp();
-	sphere.disp();
+	//lightning.disp();
+	//sphere.disp();
+	owl.disp();
 
 	gnomon.exec();
 	gnomon.disp();
@@ -376,8 +461,9 @@ int main(int argc, char* argv[]) {
 
 	trackballCam.init(get_camera());
 
-	lightning.init();
-	sphere.init();
+	//lightning.init();
+	//sphere.init();
+	owl.init();
 
 	auto& l = cConstBufStorage::get().mLightCBuf; 
 	::memset(&l.mData, 0, sizeof(l.mData));
@@ -432,6 +518,10 @@ int main(int argc, char* argv[]) {
 
 	l.update(get_gfx().get_ctx());
 	l.set_PS(get_gfx().get_ctx()); 
+
+
+	auto& skinCBuf = cConstBufStorage::get().mSkinCBuf;
+	skinCBuf.set_VS(get_gfx().get_ctx());
 
 	loop();
 

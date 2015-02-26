@@ -18,3 +18,6 @@ void dbg_msg(cstr format, ...) {
 	 va_end(va);
 	 ::OutputDebugStringA(msg);
 }
+
+
+
