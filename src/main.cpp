@@ -11,6 +11,7 @@
 #include "texture.hpp"
 #include "model.hpp"
 #include "rig.hpp"
+#include "anim.hpp"
 #include "input.hpp"
 #include "camera.hpp"
 #include "imgui_impl.hpp"
@@ -253,6 +254,9 @@ class cOwl {
 	cModelMaterial mMtl;
 	cRigData mRigData;
 	cRig mRig;
+	cAnimationData mAnimData;
+	cAnimation mAnim;
+	float mFrame = 0.0f;
 public:
 
 	bool init() {
@@ -265,6 +269,8 @@ public:
 		mRigData.load("w:/houdini/reversed/cot/c116_ev.pak/test.rig");
 		mRig.init(&mRigData);
 
+		mAnimData.load("w:/houdini/reversed/cot/c116_ev.pak/test.anim");
+		mAnim.init(mAnimData, mRigData);
 		float scl = 0.01f;
 		mModel.mWmtx = DirectX::XMMatrixScaling(scl, scl, scl);
 
@@ -314,6 +320,12 @@ public:
 	}
 
 	void disp() {
+		mAnim.eval(mRig, mFrame);
+		mFrame += 1.0f;
+
+		if (mFrame > mAnimData.mLastFrame)
+			mFrame = 0.0f;
+
 		mRig.calc_local();
 		mRig.calc_world();
 		mRig.upload_skin(get_gfx().get_ctx());

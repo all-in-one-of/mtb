@@ -116,6 +116,15 @@ bool cRigData::load_json(cstr filepath) {
 	return nJsonHelpers::load_file(filepath, loader);
 }
 
+int cRigData::find_joint_idx(cstr name) const {
+	for (int i = 0; i < mJointsNum; ++i) {
+		if (0 == mpNames[i].compare(name)) {
+			return i;
+		}
+	}
+	return -1;
+}
+
 
 void cRig::init(cRigData const* pRigData) {
 	if (!pRigData) { return; }
@@ -124,6 +133,9 @@ void cRig::init(cRigData const* pRigData) {
 	auto pLMtx = std::make_unique<DirectX::XMMATRIX[]>(jointsNum);
 	auto pWMtx = std::make_unique<DirectX::XMMATRIX[]>(jointsNum);
 	auto pJoints = std::make_unique<cJoint[]>(jointsNum);
+	auto pXforms = std::make_unique<sXform[]>(jointsNum);
+
+	::memcpy(pLMtx.get(), pRigData->mpLMtx, sizeof(pRigData->mpLMtx[0]) * jointsNum);
 
 	for (int i = 0; i < jointsNum; ++i) {
 		auto const& jdata = pRigData->mpJoints[i];
@@ -131,9 +143,12 @@ void cRig::init(cRigData const* pRigData) {
 
 		assert(jdata.idx == i);
 
+		jnt.mpXform = &pXforms[i];
 		jnt.mpLMtx = &pLMtx[i];
 		jnt.mpWMtx = &pWMtx[i];
 		
+		jnt.mpXform->init(*jnt.mpLMtx);
+
 		if (jdata.skinIdx >= 0) {
 			jnt.mpIMtx = &pRigData->mpIMtx[jdata.skinIdx];
 		}
@@ -145,21 +160,21 @@ void cRig::init(cRigData const* pRigData) {
 			jnt.mpParentMtx = &nMtx::g_Identity;
 		}
 	}
-
-	::memcpy(pLMtx.get(), pRigData->mpLMtx, sizeof(pRigData->mpLMtx[0]) * jointsNum);
-		
+	
 	mJointsNum = jointsNum;
 	mpRigData = pRigData;
 	mpJoints = pJoints.release();
 	mpLMtx = pLMtx.release();
 	mpWmtx = pWMtx.release();
+	mpXforms = pXforms.release();
 
 	calc_world();
 }
 
-
 void cRig::calc_local() {
-
+	for (int i = 0; i < mJointsNum; ++i) {
+		mpJoints[i].calc_local();
+	}
 }
 
 void cRig::calc_world() {
@@ -195,13 +210,11 @@ cJoint* cRig::get_joint(int idx) const {
 cJoint* cRig::find_joint(cstr name) const {
 	if (!mpJoints || !mpRigData) { return nullptr; }
 
-	auto const pNames = mpRigData->mpNames;
-	for (int i = 0; i < mJointsNum; ++i) {
-		if (0 == pNames[i].compare(name)) {
-			return &mpJoints[i];
-		}
-	}
-	return nullptr;
+	int idx = mpRigData->find_joint_idx(name);
+	if (idx == -1)
+		return nullptr;
+
+	return &mpJoints[idx];
 }
 
 
@@ -211,4 +224,7 @@ void cJoint::calc_world() {
 	(*mpWMtx) = (*mpLMtx) * (*mpParentMtx);
 }
 
+void cJoint::calc_local() {
+	(*mpLMtx) = mpXform->build_mtx();
+}
 

@@ -48,6 +48,9 @@
     <ClInclude Include="src\json_helpers.hpp">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\anim.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -90,6 +93,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\math.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\anim.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

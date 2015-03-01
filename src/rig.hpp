@@ -21,6 +21,8 @@ public:
 	~cRigData();
 
 	bool load(cstr filepath);
+	
+	int find_joint_idx(cstr name) const;
 private:
 
 	bool load_json(cstr filepath);
@@ -29,7 +31,10 @@ private:
 	friend class cRig;
 };
 
+
+
 class cJoint {
+	sXform* mpXform = nullptr;
 	DirectX::XMMATRIX* mpLMtx = nullptr;
 	DirectX::XMMATRIX* mpWMtx = nullptr;
 	DirectX::XMMATRIX const* mpIMtx = nullptr;
@@ -43,6 +48,9 @@ public:
 	//void set_inv_mtx(DirectX::XMMATRIX* pMtx) { mpIMtx = pMtx; }
 	void set_parent_mtx(DirectX::XMMATRIX* pMtx) { mpParentMtx = pMtx; }
 
+	sXform& get_xform() { return *mpXform; }
+
+	void calc_local();
 	void calc_world();
 
 private:
@@ -55,6 +63,7 @@ class cRig {
 	cRigData const* mpRigData;
 	DirectX::XMMATRIX* mpLMtx;
 	DirectX::XMMATRIX* mpWmtx;
+	sXform* mpXforms;
 public:
 
 	void init(cRigData const* pRigData);

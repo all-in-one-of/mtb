@@ -99,6 +99,30 @@ T clamp(T x, T min, T max) {
 	return std::max(min, std::min(x, max));
 }
 
+template <typename T>
+T lerp(T a, T b, T t) {
+	return (1.0f - t) * a + t * b;
+}
+
+DirectX::XMVECTOR XM_CALLCONV hermite(
+	DirectX::FXMVECTOR pos0, DirectX::FXMVECTOR tan0,
+	DirectX::FXMVECTOR pos1, DirectX::GXMVECTOR tan1,
+	DirectX::HXMVECTOR t
+);
+
+DirectX::XMVECTOR XM_CALLCONV euler_xyz_to_quat(DirectX::FXMVECTOR xyz);
+
 namespace nMtx {
 extern const DirectX::XMMATRIX g_Identity;
 }
+
+
+struct sXform {
+	DirectX::XMVECTOR mPos;
+	DirectX::XMVECTOR mQuat;
+	DirectX::XMVECTOR mScale;
+
+	void XM_CALLCONV init(DirectX::FXMMATRIX mtx);
+	DirectX::XMMATRIX XM_CALLCONV build_mtx() const;
+};
+
