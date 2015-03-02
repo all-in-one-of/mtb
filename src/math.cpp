@@ -6,16 +6,30 @@ namespace nMtx {
 const DirectX::XMMATRIX g_Identity = DirectX::XMMatrixIdentity();
 }
 
+// Hermite cubic spline
+// Result = (2 * t^3 - 3 * t^2 + 1) * Position0 +
+//          (t^3 - 2 * t^2 + t) * Tangent0 +
+//          (-2 * t^3 + 3 * t^2) * Position1 +
+//          (t^3 - t^2) * Tangent1
+
+float hermite(float pos0, float tan0, float pos1, float tan1, float t) {
+	float tt = t*t;
+	float ttt = tt*t;
+	float tt3 = tt*3.0f;
+	float tt2 = tt + tt;
+	float ttt2 = tt2 * t;
+	float a = ttt2 - tt3 + 1.0f;
+	float b = ttt - tt2 + t;
+	float c = -ttt2 + tt3;
+	float d = ttt - tt;
+	return a * pos0 + b * tan0 + c * pos1 + d * tan1;
+}
+
 DirectX::XMVECTOR XM_CALLCONV hermite(
 	DirectX::FXMVECTOR pos0, DirectX::FXMVECTOR tan0,
 	DirectX::FXMVECTOR pos1, DirectX::GXMVECTOR tan1,
 	DirectX::HXMVECTOR t
 	) {
-	// Result = (2 * t^3 - 3 * t^2 + 1) * Position0 +
-	//          (t^3 - 2 * t^2 + t) * Tangent0 +
-	//          (-2 * t^3 + 3 * t^2) * Position1 +
-	//          (t^3 - t^2) * Tangent1
-
 	dx::XMVECTOR tt = dx::XMVectorMultiply(t, t);
 	dx::XMVECTOR ttt = dx::XMVectorMultiply(tt, t);
 	dx::XMVECTOR ttt2 = dx::XMVectorScale(ttt, 2.0f);

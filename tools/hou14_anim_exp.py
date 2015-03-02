@@ -73,9 +73,13 @@ class Component:
                 self.inSlope = 0.0
                 self.outSlope = 0.0
 
+            fps = hou.fps()
+            self.inSlope /= fps
+            self.outSlope /= fps
+
             expr = k.expression()
             self.expr = parse_kfr_expression(expr)
-            #print expr, self.expr
+            # print expr, self.expr
 
     def __init__(self):
         self.keyframes = []
@@ -89,7 +93,19 @@ class Component:
             c = Component.Keyframe(k)
             # if toRad:
             #     c.val = math.radians(c.val)
+            if self.keyframes:
+                prev = self.keyframes[-1]
+                segmentLength = c.frame - prev.frame
+                c.inSlope *= segmentLength
+                c.outSlope *= segmentLength
             self.keyframes.append(c)
+
+        if len(self.keyframes) > 1:
+            k0 = self.keyframes[0]
+            k1 = self.keyframes[1]
+            segmentLength = k1.frame - k0.frame
+            c.inSlope *= segmentLength
+            c.outSlope *= segmentLength
 
     def __getitem__(self, idx):
         return self.keyframes[idx]
@@ -232,6 +248,7 @@ class Animation:
 
 
 def main():
+    # chNode = hou.node('/obj/ANIM/MOT/test')
     chNode = hou.node('/obj/ANIM/MOT/c116_0610_wait_accent_b')
     anim = Animation(chNode)
     anim.save_json(r"w:\houdini\reversed\cot\c116_ev.pak\test.anim")

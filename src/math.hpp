@@ -104,6 +104,8 @@ T lerp(T a, T b, T t) {
 	return (1.0f - t) * a + t * b;
 }
 
+float hermite(float pos0, float tan0, float pos1, float tan1, float t);
+
 DirectX::XMVECTOR XM_CALLCONV hermite(
 	DirectX::FXMVECTOR pos0, DirectX::FXMVECTOR tan0,
 	DirectX::FXMVECTOR pos1, DirectX::GXMVECTOR tan1,
