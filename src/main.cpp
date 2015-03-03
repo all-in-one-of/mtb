@@ -265,15 +265,21 @@ public:
 
 	bool init() {
 		bool res = true;
-		res = res && mMdlData.load("../data/owl/owl.geo");
-		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, "../data/owl/owl.mtl");
+
+//#define OBJPATH "../data/owl/"
+#define OBJPATH "../data/succub/"
+
+		res = res && mMdlData.load(OBJPATH "def.geo");
+		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, OBJPATH "def.mtl");
 		res = res && mModel.init(mMdlData, mMtl);
 
-		mRigData.load("../data/owl/owl.rig");
+		mRigData.load(OBJPATH "def.rig");
 		mRig.init(&mRigData);
 
-		mAnimDataList.load("../data/owl/", "owl.alist");
+		mAnimDataList.load(OBJPATH, "def.alist");
 		mAnimList.init(mAnimDataList, mRigData);
+
+#undef OBJPATH
 
 		float scl = 0.01f;
 		mModel.mWmtx = DirectX::XMMatrixScaling(scl, scl, scl);

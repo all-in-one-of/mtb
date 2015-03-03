@@ -60,7 +60,7 @@ struct sTestMtlCBuf {
 };
 
 struct sSkinCBuf {
-	enum { MAX_SKIN_MTX = 32 };
+	enum { MAX_SKIN_MTX = 64 };
 	DirectX::XMMATRIX skin[MAX_SKIN_MTX];
 };
 

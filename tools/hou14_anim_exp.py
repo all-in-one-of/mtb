@@ -227,6 +227,8 @@ class Channel:
 
 class Animation:
     def __init__(self, node):
+        print 'Read %s' % (node.path(),)
+
         numChannels = node.parm("numchannels").eval()
 
         channels = []
@@ -281,7 +283,7 @@ def main():
     pathPrefix = hou.expandString("$HIP/out")
     chopNet = hou.node('/obj/ANIM/MOT/')
     alist = AnimationList(chopNet)
-    alist.save_json(pathPrefix, "owl")
+    alist.save_json(pathPrefix, "def")
     # chNode = hou.node('/obj/ANIM/MOT/test')
     # chNode = hou.node('/obj/ANIM/MOT/c116_0610_wait_accent_b')
     # anim = Animation(chNode)
