@@ -126,6 +126,44 @@ private:
 };
 
 
+class cAnimListJsonLoader {
+	cstr mPath;
+	cAnimationDataList& mList;
+public:
+	cAnimListJsonLoader(cAnimationDataList& list, cstr path) : mPath(path), mList(list) {}
+	bool operator()(Value const& doc) {
+		CHECK_SCHEMA(doc.IsArray(), "doc is not an array\n");
+		Size count = doc.Size();
+		
+		char buf[256];
+		auto pAdata = std::make_unique<cAnimationData[]>(count);
+		std::unordered_map<std::string, int32_t> map;
+		int anim = 0;
+
+		for (Size i = 0; i < count; ++i) {
+			auto& rec = doc[i];
+			CHECK_SCHEMA(rec.HasMember("name"), "rec has no name\n");
+			auto& n = rec["name"];
+			CHECK_SCHEMA(rec.HasMember("fname"), "rec has no fname\n");
+			auto& fn = rec["fname"];
+
+			std::string fname(fn.GetString(), fn.GetStringLength());
+
+			::sprintf_s(buf, "%s/%s", mPath.p, fname.c_str());
+			if (pAdata[anim].load(buf)) {
+				map[std::string(n.GetString(), n.GetStringLength())] = anim;
+				anim++;
+			}
+		}
+
+		mList.mpList = pAdata.release();
+		mList.mCount = anim;
+		mList.mMap = std::move(map);
+
+		return true;
+	}
+};
+
 cChannel::~cChannel() {
 	delete[] mpKeyframesNum;
 	if (mpComponents)
@@ -276,7 +314,7 @@ void cAnimation::init(cAnimationData const& animData, cRigData const& rigData) {
 	mLinksNum = linksNum;
 }
 
-void cAnimation::eval(cRig& rig, float frame) {
+void cAnimation::eval(cRig& rig, float frame) const {
 	for (int i = 0; i < mLinksNum; ++i) {
 		auto chIdx = mpLinks[i].chIdx;
 		auto jntIdx = mpLinks[i].jntIdx;
@@ -297,3 +335,32 @@ void cAnimation::eval(cRig& rig, float frame) {
 	}
 }
 
+
+cAnimationDataList::~cAnimationDataList() {
+	delete[] mpList;
+}
+
+bool cAnimationDataList::load(cstr path, cstr filename) {
+	char buf[256];
+	::sprintf_s(buf, "%s/%s", path, filename);
+	cAnimListJsonLoader loader(*this, path);
+	return nJsonHelpers::load_file(buf, loader);
+}
+
+cAnimationList::~cAnimationList() {
+	delete[] mpList;
+}
+
+void cAnimationList::init(cAnimationDataList const& dataList, cRigData const& rigData) {
+	int32_t count = dataList.get_count();
+	auto pList = std::make_unique<cAnimation[]>(count);
+
+	for (int32_t i = 0; i < count; ++i) {
+		auto& data = dataList[i];
+		pList[i].init(data, rigData);
+	}
+
+	mpList = pList.release();
+	mCount = count;
+	mpDataList = &dataList;
+}

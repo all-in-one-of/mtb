@@ -3,6 +3,14 @@ import hou
 import json
 from collections import OrderedDict
 
+
+def save_json(filepath, data):
+    print "Saving to %s" % (filepath,)
+    with open(filepath, 'w') as f:
+        json.dump(data, f, indent=4, separators=(',', ': '))
+        # json.dump(res, f, separators=(',', ':'))
+
+
 class ChTypes:
     COMMON = 0
     EULER = 1
@@ -241,17 +249,43 @@ class Animation:
             ch.append(c.save_json())
         res['channels'] = ch
 
-        print "Saving to %s" % (filepath,)
-        with open(filepath, 'w') as f:
-            json.dump(res, f, indent=4, separators=(',', ': '))
-            # json.dump(res, f, separators=(',', ':'))
+        save_json(filepath, res)
+        
+
+
+class AnimationList:
+    def __init__(self, chopNet):
+        animations = []
+        for c in chopNet.children():
+            anim = Animation(c)
+            animations.append(anim)
+        self.animations = animations
+            
+    def save_json(self, pathPrefix, listName):
+        alist = []
+        for anim in self.animations:
+            fname = "%s.anim" % (anim.name,)
+            fpath = "%s/%s" % (pathPrefix, fname)
+            anim.save_json(fpath)
+
+            rec = OrderedDict()
+            rec['name'] = anim.name
+            rec['fname'] = fname
+            alist.append(rec)
+
+        filepath = "%s/%s.alist" % (pathPrefix, listName)
+        save_json(filepath, alist)
 
 
 def main():
+    pathPrefix = hou.expandString("$HIP/out")
+    chopNet = hou.node('/obj/ANIM/MOT/')
+    alist = AnimationList(chopNet)
+    alist.save_json(pathPrefix, "owl")
     # chNode = hou.node('/obj/ANIM/MOT/test')
-    chNode = hou.node('/obj/ANIM/MOT/c116_0610_wait_accent_b')
-    anim = Animation(chNode)
-    anim.save_json(r"w:\houdini\reversed\cot\c116_ev.pak\test.anim")
+    # chNode = hou.node('/obj/ANIM/MOT/c116_0610_wait_accent_b')
+    # anim = Animation(chNode)
+    # anim.save_json(r"w:\houdini\reversed\cot\c116_ev.pak\test.anim")
 
 
 if __name__ in ['__main__', '__builtin__']:

@@ -1,3 +1,5 @@
+#include <unordered_map>
+
 class cRigData;
 class cRig;
 struct sXform;
@@ -84,6 +86,61 @@ public:
 	~cAnimation();
 	void init(cAnimationData const& animData, cRigData const& rigData);
 
-	void eval(cRig& rig, float frame);
+	void eval(cRig& rig, float frame) const;
+
+	float get_last_frame() const {
+		return mpAnimData->mLastFrame;
+	}
+	cstr get_name() const {
+		return mpAnimData->mName.c_str();
+	}
+};
+
+class cAnimationDataList : noncopyable {
+	cAnimationData* mpList = nullptr;
+	int32_t mCount = 0;
+	std::unordered_map<std::string, int32_t> mMap;
+public:
+	~cAnimationDataList();
+	bool load(cstr path, cstr filename);
+
+	int32_t get_count() const { return mCount; }
+	cAnimationData const& operator[](int32_t idx) const {
+		return mpList[idx];
+	}
+
+	int32_t find_idx(cstr name) const {
+		auto it = mMap.find(name.p);
+		if (it == mMap.cend()) {
+			return -1;
+		}
+		else {
+			return it->second;
+		}
+	}
+private:
+	friend class cAnimListJsonLoader;
+};
+
+class cAnimationList : noncopyable {
+	cAnimation* mpList = nullptr;
+	int32_t mCount;
+	cAnimationDataList const* mpDataList = nullptr;
+public:
+	~cAnimationList();
+	void init(cAnimationDataList const& dataList, cRigData const& rigData);
+
+	int32_t get_count() const { return mCount; }
+	cAnimation const& operator[](int32_t idx) const {
+		return mpList[idx];
+	}
+	int32_t find_idx(cstr name) const {
+		if (mpDataList) {
+			return mpDataList->find_idx(name);
+		}
+		else {
+			return -1;
+		}
+	}
 };
 

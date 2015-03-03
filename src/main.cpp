@@ -254,61 +254,33 @@ class cOwl {
 	cModelMaterial mMtl;
 	cRigData mRigData;
 	cRig mRig;
-	cAnimationData mAnimData;
-	cAnimation mAnim;
+
+	cAnimationDataList mAnimDataList;
+	cAnimationList mAnimList;
+
 	float mFrame = 0.0f;
+	float mSpeed = 1.0f;
+	int mCurAnim = 0;
 public:
 
 	bool init() {
 		bool res = true;
-		//res = res && mMdlData.load("../data/owl.geo");
-		res = res && mMdlData.load("w:/houdini/reversed/cot/c116_ev.pak/test.geo");
-		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, "../data/owl.mtl");
+		res = res && mMdlData.load("../data/owl/owl.geo");
+		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, "../data/owl/owl.mtl");
 		res = res && mModel.init(mMdlData, mMtl);
 
-		mRigData.load("w:/houdini/reversed/cot/c116_ev.pak/test.rig");
+		mRigData.load("../data/owl/owl.rig");
 		mRig.init(&mRigData);
 
-		mAnimData.load("w:/houdini/reversed/cot/c116_ev.pak/test.anim");
-		mAnim.init(mAnimData, mRigData);
+		mAnimDataList.load("../data/owl/", "owl.alist");
+		mAnimList.init(mAnimDataList, mRigData);
+
 		float scl = 0.01f;
 		mModel.mWmtx = DirectX::XMMatrixScaling(scl, scl, scl);
 
 		auto pRootJnt = mRig.get_joint(0);
 		if (pRootJnt) {
 			pRootJnt->set_parent_mtx(&mModel.mWmtx);
-		}
-
-		auto pHeadJnt = mRig.find_joint("j_002");
-		if (pHeadJnt) {
-			auto& mtx = pHeadJnt->get_local_mtx();
-			auto r3 = mtx.r[3];
-			mtx = DirectX::XMMatrixRotationY(DEG2RAD(90));
-			mtx.r[3] = r3;
-		}
-
-		auto pLegJnt = mRig.find_joint("j_201");
-		if (pLegJnt) {
-			auto& mtx = pLegJnt->get_local_mtx();
-			auto r3 = mtx.r[3];
-			mtx = DirectX::XMMatrixRotationX(DEG2RAD(-58));
-			mtx.r[3] = r3;
-		}
-
-		auto pWing1Jnt = mRig.find_joint("j_011");
-		if (pWing1Jnt) {
-			auto& mtx = pWing1Jnt->get_local_mtx();
-			auto r3 = mtx.r[3];
-			mtx = DirectX::XMMatrixRotationZ(DEG2RAD(61));
-			mtx.r[3] = r3;
-		}
-
-		auto pWing2Jnt = mRig.find_joint("j_015");
-		if (pWing2Jnt) {
-			auto& mtx = pWing2Jnt->get_local_mtx();
-			auto r3 = mtx.r[3];
-			mtx = DirectX::XMMatrixRotationZ(DEG2RAD(-36));
-			mtx.r[3] = r3;
 		}
 
 		return res;
@@ -320,11 +292,22 @@ public:
 	}
 
 	void disp() {
-		mAnim.eval(mRig, mFrame);
-		mFrame += 1.0f;
+		int32_t animCount = mAnimList.get_count();
+		auto& anim = mAnimList[mCurAnim];
+		float lastFrame = anim.get_last_frame();
 
-		if (mFrame > mAnimData.mLastFrame)
+		anim.eval(mRig, mFrame);
+		mFrame += mSpeed;
+		if (mFrame > lastFrame)
 			mFrame = 0.0f;
+
+		ImGui::Begin("anim");
+		ImGui::LabelText("name", "%s", anim.get_name());
+		ImGui::SliderInt("curAnim", &mCurAnim, 0, animCount - 1);
+		ImGui::SliderFloat("frame", &mFrame, 0.0f, lastFrame);
+		ImGui::SliderFloat("speed", &mSpeed, 0.0f, 3.0f);
+		ImGui::End();
+
 
 		mRig.calc_local();
 		mRig.calc_world();
