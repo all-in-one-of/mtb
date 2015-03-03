@@ -9,3 +9,4 @@ data/lightning_tex/
 *.nvuser
 ipch/
 tools/backup/
+data/owl/
