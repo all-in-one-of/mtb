@@ -112,8 +112,8 @@ class Component:
             k0 = self.keyframes[0]
             k1 = self.keyframes[1]
             segmentLength = k1.frame - k0.frame
-            c.inSlope *= segmentLength
-            c.outSlope *= segmentLength
+            k0.inSlope *= segmentLength
+            k0.outSlope *= segmentLength
 
     def __getitem__(self, idx):
         return self.keyframes[idx]
