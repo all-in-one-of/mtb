@@ -3,6 +3,7 @@
 
 struct sModelVtx;
 class cShader;
+class cAssimpLoader;
 
 struct sGroup {
 	uint32_t mVtxOffset;
@@ -42,6 +43,7 @@ public:
 	void unload();
 
 	bool load_assimp(cstr filepath);
+	bool load_assimp(cAssimpLoader& loader);
 	bool load_hou_geo(cstr filepath);
 };
 

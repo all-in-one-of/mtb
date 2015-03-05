@@ -1,5 +1,5 @@
 struct ID3D11DeviceContext;
-
+class cAssimpLoader;
 
 struct sJointData {
 	int idx;
@@ -21,6 +21,7 @@ public:
 	~cRigData();
 
 	bool load(cstr filepath);
+	bool load(cAssimpLoader& loader);
 	
 	int find_joint_idx(cstr name) const;
 private:

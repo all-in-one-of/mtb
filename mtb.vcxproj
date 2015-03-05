@@ -176,6 +176,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\anim.cpp" />
+    <ClCompile Include="src\assimp_loader.cpp" />
     <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\common.cpp" />
     <ClCompile Include="src\gfx.cpp" />
@@ -193,6 +194,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\anim.hpp" />
+    <ClInclude Include="src\assimp_loader.hpp" />
     <ClInclude Include="src\camera.hpp" />
     <ClInclude Include="src\hou_geo.hpp" />
     <ClInclude Include="src\imgui_impl.hpp" />

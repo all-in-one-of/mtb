@@ -16,9 +16,23 @@ struct vec3 {
 };
 struct vec4 {
 	DirectX::XMFLOAT4 mVal;
+
+	float operator[](int idx) const {
+		return reinterpret_cast<float const*>(&mVal)[idx];
+	}
+	float& operator[](int idx) {
+		return reinterpret_cast<float*>(&mVal)[idx];
+	}
 };
 struct vec4i {
 	DirectX::XMINT4 mVal;
+
+	int32_t operator[](int idx) const {
+		return reinterpret_cast<int32_t const*>(&mVal)[idx];
+	}
+	int32_t& operator[](int idx) {
+		return reinterpret_cast<int32_t*>(&mVal)[idx];
+	}
 };
 
 template <typename T>

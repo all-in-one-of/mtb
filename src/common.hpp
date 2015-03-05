@@ -49,6 +49,15 @@ public:
 	}
 
 	bool equals(cstr o) const { return cmpr(o) == 0; }
+
+	bool operator==(cstr const& o) const { return equals(o); }
+};
+
+template <>
+struct std::hash < cstr > {
+	using argument_type = cstr;
+	using result_type = std::size_t;
+	result_type operator()(argument_type const& s) const;
 };
 
 template <typename T>

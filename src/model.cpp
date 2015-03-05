@@ -5,11 +5,10 @@
 #include "texture.hpp"
 #include "model.hpp"
 #include "hou_geo.hpp"
+#include "assimp_loader.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
-#include <assimp/postprocess.h>
-#include <assimp/config.h>
 
 #include <cassert>
 #include <imgui.h>
@@ -72,19 +71,6 @@ static vec2f as_vec2f(cHouGeoAttrib const* pa, int idx) {
 		}
 	}
 	return { tmp[0], tmp[1] };
-}
-
-struct sAIMeshInfo {
-	aiMesh* mpMesh;
-	cstr mName;
-};
-static void list_meshes(aiNode* pNode, std::vector<sAIMeshInfo>& meshes, aiScene const* pScene) {
-	if (pNode->mNumMeshes > 0) {
-		meshes.push_back({ pScene->mMeshes[pNode->mMeshes[0]], pNode->mName.C_Str()});
-	}
-	for (uint32_t i = 0; i < pNode->mNumChildren; ++i) {
-		list_meshes(pNode->mChildren[i], meshes, pScene);
-	}
 }
 
 bool cModelData::load(cstr filepath) {
@@ -239,25 +225,21 @@ struct sReadItr {
 };
 
 bool cModelData::load_assimp(cstr filepath) {
-	Assimp::Importer importer;
-
-	importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
-		aiPrimitiveType_LINE | aiPrimitiveType_POINT | aiPrimitiveType_POLYGON);
-
-	aiScene const* pScene = importer.ReadFile(filepath, 
-		/*aiProcess_FlipUVs |*/ aiProcess_FlipWindingOrder | aiProcess_SortByPType);
-	if (!pScene) {
-		// todo: log importer.GetErrorString()
-		return false;
+	cAssimpLoader loader;
+	if (loader.load(filepath)) {
+		return load_assimp(loader);
 	}
-	
-	std::vector<sAIMeshInfo> meshes;
-	meshes.reserve(pScene->mNumMeshes);
-	list_meshes(pScene->mRootNode, meshes, pScene);
+	return false;
+}
+
+bool cModelData::load_assimp(cAssimpLoader& loader) {
+	auto& meshes = loader.get_mesh_info();
+
+	int numGrp = (int)meshes.size();
+	if (numGrp == 0) { return false; }
 
 	int numVtx = 0;
 	int numIdx = 0;
-	int numGrp = (int)meshes.size();
 
 	for (auto& mi : meshes) {
 		aiMesh* pMesh = mi.mpMesh;
@@ -267,6 +249,8 @@ bool cModelData::load_assimp(cstr filepath) {
 		int idx = pMesh->mNumFaces;
 		numIdx += idx * 3;
 	}
+	
+	auto bonesMap = loader.get_bones_map();
 
 	auto pGroups = std::make_unique<sGroup[]>(numGrp);
 	auto pVtx = std::make_unique<sModelVtx[]>(numVtx);
@@ -312,6 +296,8 @@ bool cModelData::load_assimp(cstr filepath) {
 			pVtxItr->bitgt = as_vec3(bitgtItr.read());
 			pVtxItr->uv1 = as_vec2f(uv1Itr.read());
 			pVtxItr->clr = as_vec3(clrItr.read());
+			::memset(&pVtxItr->jidx, 0, sizeof(pVtxItr->jidx));
+			::memset(&pVtxItr->jwgt, 0, sizeof(pVtxItr->jwgt));
 			++pVtxItr;
 		}
 
@@ -326,6 +312,31 @@ bool cModelData::load_assimp(cstr filepath) {
 			pIdxItr += 3;
 			++pFace;
 		}
+
+		
+		for (uint32_t bone = 0; bone < pMesh->mNumBones; ++bone) {
+			auto pBone = pMesh->mBones[bone];
+			auto bIt = bonesMap.find(pBone->mName.C_Str());
+			if (bIt == bonesMap.end()) { continue; }
+
+			int32_t boneIdx = bIt->second;
+
+			auto w = pBone->mWeights;
+			for (uint32_t i = 0; i < pBone->mNumWeights; ++i) {
+				auto vidx = w[i].mVertexId;
+				auto jwgt = w[i].mWeight;
+				
+				auto& vtx = pVtxGrpStart[vidx];
+				for (int j = 0; j < 4; ++j) {
+					if (vtx.jwgt[j] == 0.0f) {
+						vtx.jwgt[j] = jwgt;
+						vtx.jidx[j] = boneIdx;
+						break;
+					}
+				}
+			}
+		}
+
 
 		pGrpItr->mVtxOffset = static_cast<uint32_t>((pVtxGrpStart - pVtx.get()) * sizeof(pVtxGrpStart[0]));
 		pGrpItr->mIdxCount = static_cast<uint32_t>((pIdxItr - pIdxGrpStart));

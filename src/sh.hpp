@@ -56,6 +56,14 @@ struct sSHCoef {
 		}
 	};
 
+public:
+
+	sSHChan mR;
+	sSHChan mG;
+	sSHChan mB;
+
+public:
+
 	void add(sSHCoef const& c) {
 		mR.add(c.mR);
 		mG.add(c.mG);
@@ -92,7 +100,5 @@ struct sSHCoef {
 		throw std::exception("Wrong channel ID");
 	}
 
-	sSHChan mR;
-	sSHChan mG;
-	sSHChan mB;
+
 };

@@ -1,10 +1,14 @@
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "math.hpp"
 #include "common.hpp"
 #include "rig.hpp"
 #include "rdr.hpp"
+#include "assimp_loader.hpp"
+
+#include <assimp/scene.h>
 
 #include "json_helpers.hpp"
 
@@ -126,6 +130,104 @@ int cRigData::find_joint_idx(cstr name) const {
 }
 
 
+struct sNodeHie {
+	aiNode const* mpNode;
+	int32_t mJntIdx;
+	int32_t mParentIdx;
+	int32_t mBoneIdx;
+	bool mRequired;
+};
+
+static void list_nodes(aiScene const* pScene, aiNode const* pNode, int32_t parentIdx, std::vector<sNodeHie>& nodeHie) {
+	int32_t nodeIdx = nodeHie.size();
+	nodeHie.emplace_back(sNodeHie{pNode, -1, parentIdx, -1, false});
+
+	for (uint32_t i = 0; i < pNode->mNumChildren; ++i) {
+		list_nodes(pScene, pNode->mChildren[i], nodeIdx, nodeHie);
+	}
+}
+
+static void mark_required(std::vector<sNodeHie>& nodeHie, int idx) {
+	auto& nh = nodeHie[idx];
+	if (nh.mRequired) { return; }
+	nh.mRequired = true;
+	if (nh.mParentIdx >= 0) {
+		mark_required(nodeHie, nh.mParentIdx);
+	}
+}
+
+bool cRigData::load(cAssimpLoader& loader) {
+	auto pScene = loader.get_scene();
+	if (!pScene) { return false; }
+	auto& bones = loader.get_bones_info();
+	if (bones.size() == 0) { return false; }
+	auto& bonesMap = loader.get_bones_map();
+
+	std::vector<sNodeHie> nodeHie;
+	list_nodes(pScene, pScene->mRootNode, -1, nodeHie);
+
+	for (int i = 0; i < nodeHie.size(); ++i) {
+		auto& nh = nodeHie[i];
+		auto bit = bonesMap.find(nh.mpNode->mName.C_Str());
+		if (bit != bonesMap.end()) {
+			nh.mBoneIdx = bit->second;
+			mark_required(nodeHie, i);
+		}
+	}
+
+	int32_t jointsNum = 0;
+	for (auto& nh : nodeHie) {
+		if (nh.mRequired) {
+			nh.mJntIdx = jointsNum;
+			++jointsNum;
+		}
+	}
+
+	int32_t imtxNum = bones.size();
+
+	auto pJoints = std::make_unique<sJointData[]>(jointsNum);
+	auto pMtx = std::make_unique<DirectX::XMMATRIX[]>(jointsNum);
+	auto pImtx = std::make_unique<DirectX::XMMATRIX[]>(imtxNum);
+	auto pNames = std::make_unique<std::string[]>(jointsNum);
+
+	int idx = 0;
+	for (auto const& nh : nodeHie) {
+		if (!nh.mRequired) { continue; }
+		assert(idx < jointsNum);
+		int parIdx = -1;
+		if (nh.mParentIdx >= 0) {
+			parIdx = nodeHie[nh.mParentIdx].mJntIdx;
+		}
+		pJoints[idx] = sJointData{ idx, parIdx, nh.mBoneIdx };
+
+		::memcpy(&pMtx[idx], &nh.mpNode->mTransformation, sizeof(pMtx[idx]));
+		pMtx[idx] = DirectX::XMMatrixTranspose(pMtx[idx]);
+
+		pNames[idx] = std::string(nh.mpNode->mName.C_Str(), nh.mpNode->mName.length);
+
+		if (nh.mBoneIdx >= 0) {
+			auto const& bone = bones[nh.mBoneIdx];
+			auto& imtx = pImtx[nh.mBoneIdx];
+
+			::memcpy(&imtx, &bone.mpBone->mOffsetMatrix, sizeof(imtx));
+			imtx = DirectX::XMMatrixTranspose(imtx);
+		}
+
+		++idx;
+	}
+
+	mJointsNum = jointsNum;
+	mIMtxNum = imtxNum;
+	mpJoints = pJoints.release();
+	mpLMtx = pMtx.release();
+	mpIMtx = pImtx.release();
+	mpNames = pNames.release();
+	mAllocatedArrays = true;
+
+	return true;
+}
+
+
 void cRig::init(cRigData const* pRigData) {
 	if (!pRigData) { return; }
 	
@@ -142,6 +244,7 @@ void cRig::init(cRigData const* pRigData) {
 		auto& jnt = pJoints[i];
 
 		assert(jdata.idx == i);
+		assert(jdata.parIdx < i);
 
 		jnt.mpXform = &pXforms[i];
 		jnt.mpLMtx = &pLMtx[i];
@@ -220,7 +323,6 @@ cJoint* cRig::find_joint(cstr name) const {
 
 
 void cJoint::calc_world() {
-	//(*mpWMtx) = (*mpParentMtx) * (*mpLMtx);
 	(*mpWMtx) = (*mpLMtx) * (*mpParentMtx);
 }
 

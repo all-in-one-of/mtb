@@ -16,13 +16,13 @@
 #include "camera.hpp"
 #include "imgui_impl.hpp"
 #include "sh.hpp"
-
 #include <imgui.h>
 
 namespace dx = DirectX;
 using dx::XMFLOAT4;
 
-#include <assimp\Importer.hpp>
+#include <assimp/Importer.hpp>
+#include "assimp_loader.hpp"
 
 class cSDLInit {
 public:
@@ -324,10 +324,70 @@ public:
 	}
 };
 
+
+class cUnrealPuppet {
+	cModel mModel;
+	cModelData mMdlData;
+	cModelMaterial mMtl;
+	cRigData mRigData;
+	cRig mRig;
+
+	cAnimationDataList mAnimDataList;
+	cAnimationList mAnimList;
+
+	float mFrame = 0.0f;
+	float mSpeed = 1.0f;
+	int mCurAnim = 0;
+public:
+
+	bool init() {
+		bool res = true;
+
+#define OBJPATH "../data/unreal_puppet/"
+
+		cAssimpLoader loader;
+		res = res && loader.load_unreal_fbx(OBJPATH "SideScrollerSkeletalMesh.FBX");
+		res = res && mMdlData.load_assimp(loader);
+		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, OBJPATH "def.mtl");
+		res = res && mModel.init(mMdlData, mMtl); 
+
+		mRigData.load(loader);
+		mRig.init(&mRigData);
+
+#undef OBJPATH
+
+		float scl = 0.01f;
+		mModel.mWmtx = DirectX::XMMatrixScaling(scl, scl, scl);
+		mModel.mWmtx *= DirectX::XMMatrixRotationX(DEG2RAD(-90.0f)); 
+
+		auto pRootJnt = mRig.get_joint(0);
+		if (pRootJnt) {
+			pRootJnt->set_parent_mtx(&mModel.mWmtx);
+		}
+
+		return res;
+	}
+
+	void deinit() {
+		mModel.deinit();
+		mMdlData.unload();
+	}
+
+	void disp() {
+		mRig.calc_local();
+		mRig.calc_world();
+		mRig.upload_skin(get_gfx().get_ctx());
+
+		mModel.dbg_ui();
+		mModel.disp();
+	}
+};
+
 cGnomon gnomon;
 cLightning lightning;
 cSphere sphere;
 cOwl owl;
+cUnrealPuppet upuppet;
 
 cTrackballCam trackballCam;
 
@@ -359,7 +419,8 @@ void do_frame() {
 
 	//lightning.disp();
 	//sphere.disp();
-	owl.disp();
+	//owl.disp();
+	upuppet.disp();
 
 	gnomon.exec();
 	gnomon.disp();
@@ -464,7 +525,8 @@ int main(int argc, char* argv[]) {
 
 	//lightning.init();
 	//sphere.init();
-	owl.init();
+	//owl.init();
+	upuppet.init();
 
 	auto& l = cConstBufStorage::get().mLightCBuf; 
 	::memset(&l.mData, 0, sizeof(l.mData));
