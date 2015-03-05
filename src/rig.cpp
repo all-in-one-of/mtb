@@ -139,7 +139,7 @@ struct sNodeHie {
 };
 
 static void list_nodes(aiScene const* pScene, aiNode const* pNode, int32_t parentIdx, std::vector<sNodeHie>& nodeHie) {
-	int32_t nodeIdx = nodeHie.size();
+	int32_t nodeIdx = (int32_t)nodeHie.size();
 	nodeHie.emplace_back(sNodeHie{pNode, -1, parentIdx, -1, false});
 
 	for (uint32_t i = 0; i < pNode->mNumChildren; ++i) {
@@ -183,7 +183,7 @@ bool cRigData::load(cAssimpLoader& loader) {
 		}
 	}
 
-	int32_t imtxNum = bones.size();
+	size_t imtxNum = bones.size();
 
 	auto pJoints = std::make_unique<sJointData[]>(jointsNum);
 	auto pMtx = std::make_unique<DirectX::XMMATRIX[]>(jointsNum);
@@ -217,7 +217,7 @@ bool cRigData::load(cAssimpLoader& loader) {
 	}
 
 	mJointsNum = jointsNum;
-	mIMtxNum = imtxNum;
+	mIMtxNum = (int32_t)imtxNum;
 	mpJoints = pJoints.release();
 	mpLMtx = pMtx.release();
 	mpIMtx = pImtx.release();

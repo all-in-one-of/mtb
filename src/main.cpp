@@ -336,7 +336,7 @@ class cUnrealPuppet {
 	cAnimationList mAnimList;
 
 	float mFrame = 0.0f;
-	float mSpeed = 1.0f;
+	float mSpeed = 1.0f / 60.0f;
 	int mCurAnim = 0;
 public:
 
@@ -344,16 +344,23 @@ public:
 		bool res = true;
 
 #define OBJPATH "../data/unreal_puppet/"
+		{
+			cAssimpLoader loader;
+			res = res && loader.load_unreal_fbx(OBJPATH "SideScrollerSkeletalMesh.FBX");
+			res = res && mMdlData.load_assimp(loader);
+			res = res && mMtl.load(get_gfx().get_dev(), mMdlData, OBJPATH "def.mtl");
+			res = res && mModel.init(mMdlData, mMtl);
 
-		cAssimpLoader loader;
-		res = res && loader.load_unreal_fbx(OBJPATH "SideScrollerSkeletalMesh.FBX");
-		res = res && mMdlData.load_assimp(loader);
-		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, OBJPATH "def.mtl");
-		res = res && mModel.init(mMdlData, mMtl); 
-
-		mRigData.load(loader);
-		mRig.init(&mRigData);
-
+			mRigData.load(loader);
+			mRig.init(&mRigData);
+		}
+		{
+			cAssimpLoader animLoader;
+			//animLoader.load_unreal_fbx(OBJPATH "SideScrollerIdle.FBX");
+			animLoader.load_unreal_fbx(OBJPATH "SideScrollerWalk.FBX");
+			mAnimDataList.load(animLoader);
+			mAnimList.init(mAnimDataList, mRigData);
+		}
 #undef OBJPATH
 
 		float scl = 0.01f;
@@ -374,6 +381,23 @@ public:
 	}
 
 	void disp() {
+
+		int32_t animCount = mAnimList.get_count();
+		auto& anim = mAnimList[mCurAnim];
+		float lastFrame = anim.get_last_frame();
+
+		anim.eval(mRig, mFrame);
+		mFrame += mSpeed;
+		if (mFrame > lastFrame)
+			mFrame = 0.0f;
+
+		ImGui::Begin("anim");
+		ImGui::LabelText("name", "%s", anim.get_name());
+		ImGui::SliderInt("curAnim", &mCurAnim, 0, animCount - 1);
+		ImGui::SliderFloat("frame", &mFrame, 0.0f, lastFrame);
+		ImGui::SliderFloat("speed", &mSpeed, 0.0f, 3.0f);
+		ImGui::End();
+
 		mRig.calc_local();
 		mRig.calc_world();
 		mRig.upload_skin(get_gfx().get_ctx());

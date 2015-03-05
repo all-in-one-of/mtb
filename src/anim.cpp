@@ -5,8 +5,10 @@
 #include "math.hpp"
 #include "anim.hpp"
 #include "rig.hpp"
-
+#include "assimp_loader.hpp"
 #include "json_helpers.hpp"
+
+#include <assimp/scene.h>
 
 using nJsonHelpers::Document;
 using nJsonHelpers::Value;
@@ -125,6 +127,131 @@ private:
 	}
 };
 
+class cAnimAssimpLoaderImpl {
+	cAnimationData& mData;
+public:
+	cAnimAssimpLoaderImpl(cAnimationData& data) : mData(data) {}
+	bool operator()(aiAnimation const& anim) {
+		std::string animName(anim.mName.C_Str(), anim.mName.length);
+
+		float lastFrame = (float)anim.mDuration;
+
+		
+
+		uint32_t channelsNum = anim.mNumChannels * 3;
+		auto pChannels = std::make_unique<cChannel[]>(channelsNum);
+		for (Size i = 0; i < anim.mNumChannels; ++i) {
+			auto& node = *anim.mChannels[i];
+
+			if (!load_channel(node, 's', pChannels[i * 3 + 0])) { return false; }
+			if (!load_channel(node, 'r', pChannels[i * 3 + 1])) { return false; }
+			if (!load_channel(node, 't', pChannels[i * 3 + 2])) { return false; }
+		}
+
+		mData.mpChannels = pChannels.release();
+		mData.mChannelsNum = channelsNum;
+		mData.mLastFrame = lastFrame;
+		mData.mName = std::move(animName);
+
+		return true;
+	}
+private:
+	bool load_channel(aiNodeAnim const& node, char chType, cChannel& ch) {
+		auto& n = node.mNodeName;
+		std::string name(n.C_Str(), n.length);
+
+		char buf[2] = { chType, 0 };
+		std::string subName(buf, 2);
+
+		cChannel::eChannelType type = cChannel::E_CH_COMMON;
+		cChannel::eExpressionType expr = cChannel::E_EXPR_LINEAR;
+		cChannel::eRotOrder rord = cChannel::E_ROT_XYZ;
+		int compNum = 3;
+		int kfrNum = 0;
+		switch (chType) {
+		case 's':
+			kfrNum = node.mNumScalingKeys;
+			break;
+		case 'r':
+			type = cChannel::E_CH_QUATERNION;
+			expr = cChannel::E_EXPR_QLINEAR;
+			compNum = 4;
+			kfrNum = node.mNumRotationKeys;
+			break;
+		case 't':
+			kfrNum = node.mNumPositionKeys;
+			break;
+		}
+
+		int totalKeyframes = compNum * kfrNum;
+
+		auto pKfrNum = std::make_unique<int[]>(totalKeyframes);
+		auto pComp = std::make_unique<sKeyframe*[]>(totalKeyframes);
+
+		for (int i = 0; i < compNum; ++i) {
+			pKfrNum[i] = kfrNum;
+		}
+
+		auto pKfr = std::make_unique<sKeyframe[]>(totalKeyframes);
+		sKeyframe* p = pKfr.get();
+		for (int i = 0; i < compNum; ++i) {
+			pComp[i] = p;
+			p += pKfrNum[i];
+		}
+
+		switch (chType) {
+		case 's':
+			load_keys(node.mScalingKeys, kfrNum, compNum, pComp.get());
+			break;
+		case 'r':
+			load_keys(node.mRotationKeys, kfrNum, compNum, pComp.get());
+			break;
+		case 't':
+			load_keys(node.mPositionKeys, kfrNum, compNum, pComp.get());
+			break;
+		}
+		
+		ch.mpKeyframesNum = pKfrNum.release();
+		ch.mpComponents = pComp.release();
+		pKfr.release();
+		ch.mComponentsNum = compNum;
+		ch.mType = type;
+		ch.mExpr = expr;
+		ch.mRotOrd = rord;
+		ch.mName = std::move(name);
+		ch.mSubname = std::move(subName);
+
+		return true;
+	}
+
+	template <typename T>
+	void load_keys(T const* pKeys, int kfrNum, int compNum, sKeyframe** pComp) {
+		for (int i = 0; i < kfrNum; ++i) {
+			auto const& k = pKeys[i];
+
+			for (int j = 0; j < compNum; ++j) {
+				auto& p = pComp[j][i];
+				p.frame = (float)k.mTime;
+				p.value = get_value(k, j);
+				p.inSlope = 0.0f;
+				p.outSlope = 0.0f;
+			}
+		}
+	}
+
+	static float get_value(aiVectorKey const& k, int idx) {
+		return (float)k.mValue[idx];
+	}
+	static float get_value(aiQuatKey const& k, int idx) {
+		switch (idx) {
+		case 0: return k.mValue.x;
+		case 1: return k.mValue.y;
+		case 2: return k.mValue.z;
+		case 3: return k.mValue.w;
+		}
+		return 0.0f;
+	}
+};
 
 class cAnimListJsonLoader {
 	cstr mPath;
@@ -151,7 +278,7 @@ public:
 
 			::sprintf_s(buf, "%s/%s", mPath.p, fname.c_str());
 			if (pAdata[anim].load(buf)) {
-				map[std::string(n.GetString(), n.GetStringLength())] = anim;
+				map[pAdata[anim].mName] = anim;
 				anim++;
 			}
 		}
@@ -290,6 +417,11 @@ bool cAnimationData::load(cstr filepath) {
 	return nJsonHelpers::load_file(filepath, loader);
 }
 
+bool cAnimationData::load(aiAnimation const& anim) {
+	cAnimAssimpLoaderImpl loader(*this);
+	return loader(anim);
+}
+
 cAnimation::~cAnimation() {
 	delete[] mpLinks;
 }
@@ -347,12 +479,41 @@ bool cAnimationDataList::load(cstr path, cstr filename) {
 	return nJsonHelpers::load_file(buf, loader);
 }
 
+bool cAnimationDataList::load(cAssimpLoader& loader) {
+	auto pScene = loader.get_scene();
+	if (!pScene) { return false; }
+
+	if (!pScene->HasAnimations()) { return false; }
+
+	uint32_t count = pScene->mNumAnimations;
+
+	auto pAdata = std::make_unique<cAnimationData[]>(count);
+	std::unordered_map<std::string, int32_t> map;
+	int anim = 0;
+
+	for (uint32_t i = 0; i < count; ++i) {
+		auto const& pA = pScene->mAnimations[i];
+		if (pAdata[anim].load(*pA)) {
+			map[pAdata[anim].mName] = anim;
+			anim++;
+		}
+	}
+
+	mpList = pAdata.release();
+	mCount = anim;
+	mMap = std::move(map);
+
+	return true;
+}
+
+
 cAnimationList::~cAnimationList() {
 	delete[] mpList;
 }
 
 void cAnimationList::init(cAnimationDataList const& dataList, cRigData const& rigData) {
 	int32_t count = dataList.get_count();
+	if (count == 0) { return; }
 	auto pList = std::make_unique<cAnimation[]>(count);
 
 	for (int32_t i = 0; i < count; ++i) {

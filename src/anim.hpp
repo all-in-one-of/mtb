@@ -3,6 +3,8 @@
 class cRigData;
 class cRig;
 struct sXform;
+class cAssimpLoader;
+struct aiAnimation;
 
 struct sKeyframe {
 	float frame;
@@ -64,6 +66,7 @@ public:
 public:
 	~cAnimationData();
 	bool load(cstr filepath);
+	bool load(aiAnimation const& anim);
 
 private:
 
@@ -103,6 +106,7 @@ class cAnimationDataList : noncopyable {
 public:
 	~cAnimationDataList();
 	bool load(cstr path, cstr filename);
+	bool load(cAssimpLoader& loader);
 
 	int32_t get_count() const { return mCount; }
 	cAnimationData const& operator[](int32_t idx) const {
