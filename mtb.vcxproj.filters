@@ -54,6 +54,12 @@
     <ClInclude Include="src\assimp_loader.hpp">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\light.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -102,6 +108,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\assimp_loader.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\light.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

@@ -6,12 +6,13 @@
 #include "model.hpp"
 #include "hou_geo.hpp"
 #include "assimp_loader.hpp"
+#include "imgui.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 
 #include <cassert>
-#include <imgui.h>
+
 
 
 static vec4 as_vec4_1(aiVector3D const& v) {
@@ -443,35 +444,6 @@ void cModel::disp() {
 
 }
 
-bool ImguiSlideFloat3_1(char const* label,float v[3], float v_min, float v_max, const char* display_format = "%.3f", float power = 1.0f) {
-	char keyBuf[64];
-	::sprintf_s(keyBuf, "issng%s", label);
-	ImGuiID id = ImGui::GetID(keyBuf);
-	bool res;
-	auto* pStorage = ImGui::GetStateStorage();
-	auto& style = ImGui::GetStyle();
-	bool isSingle = !!pStorage->GetInt(id);
-	if (isSingle) {
-		::sprintf_s(keyBuf, "##%s", label);
-		res = ImGui::SliderFloat(keyBuf, v, v_min, v_max, display_format, power);
-		if (res) {
-			for (int i = 1; i < 3; ++i) {
-				v[i] = v[0];
-			}
-		}
-		ImGui::SameLine(0, (int)style.ItemInnerSpacing.x);
-		ImGui::TextUnformatted(label);
-	} else {
-		res = ImGui::SliderFloat3(label, v, v_min, v_max, display_format, power);
-	}
-
-	if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))	{
-		int v = !isSingle;
-		pStorage->SetInt(id, v);
-	}
-
-	return res;
-}
 
 void cModel::dbg_ui() {
 	if (!mpData) return;

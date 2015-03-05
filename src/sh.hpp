@@ -54,6 +54,9 @@ struct sSHCoef {
 			mSH[8] = fTmpC*fC1;
 			mSH[4] = fTmpC*fS1;
 		}
+
+		template <class Archive>
+		void serialize(Archive& arc);
 	};
 
 public:
@@ -100,5 +103,6 @@ public:
 		throw std::exception("Wrong channel ID");
 	}
 
-
+	template <class Archive>
+	void serialize(Archive& arc);
 };

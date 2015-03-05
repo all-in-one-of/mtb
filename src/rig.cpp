@@ -302,6 +302,7 @@ void cRig::upload_skin(ID3D11DeviceContext* pCtx) {
 	}
 
 	skinCBuf.update(pCtx);
+	skinCBuf.set_VS(pCtx);
 }
 
 cJoint* cRig::get_joint(int idx) const {

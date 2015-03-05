@@ -6,6 +6,8 @@
 #include "texture.hpp"
 #include "model.hpp"
 #include "camera.hpp"
+#include "sh.hpp"
+#include "light.hpp"
 
 #include <cereal/archives/json.hpp>
 #include <fstream>
@@ -136,3 +138,62 @@ bool cCamera::save(cstr filepath) {
 	arc(*this);
 	return true;
 }
+
+
+template <class Archive>
+void sSHCoef::sSHChan::serialize(Archive& arc) {
+	ARC(CEREAL_NVP(mSH));
+}
+
+template <class Archive>
+void sSHCoef::serialize(Archive& arc) {
+	ARC(CEREAL_NVP(mR));
+	ARC(CEREAL_NVP(mG));
+	ARC(CEREAL_NVP(mB));
+}
+
+template<class Archive>
+void serialize(Archive& arc, vec4& v)
+{
+	arc(v[0], v[1], v[2], v[3]);
+}
+
+template <class Archive>
+void sLightPoint::serialize(Archive& arc) {
+	vec4 def = { { 1.0f, 1.0f, 1.0f, 1.0f } };
+	ARCD(CEREAL_NVP(pos), def);
+	ARCD(CEREAL_NVP(clr), def);
+	ARCD(CEREAL_NVP(enabled), true);
+}
+
+template <class Archive>
+void cLightMgr::serialize(Archive& arc) {
+	ARC(CEREAL_NVP(mPointLights));
+	ARC(CEREAL_NVP(mSH));
+}
+
+
+bool cLightMgr::load(cstr filepath) {
+	if (!filepath) { return false; }
+
+	std::ifstream ifs(filepath, std::ios::binary);
+	if (!ifs.is_open()) { return false; }
+
+	cereal::JSONInputArchive arc(ifs);
+	arc(*this);
+
+	return true;
+}
+
+
+bool cLightMgr::save(cstr filepath) {
+	if (!filepath) { return false; }
+
+	std::ofstream ofs(filepath, std::ios::binary);
+	if (!ofs.is_open())
+		return false;
+	cereal::JSONOutputArchive arc(ofs);
+	arc(*this);
+	return true;
+}
+
