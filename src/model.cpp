@@ -508,7 +508,7 @@ void cModelMaterial::apply(ID3D11DeviceContext* pCtx, int i) {
 	mpGrpRes[i].apply(pCtx);
 }
 
-void sGroupMaterial::set_default() {
+void sGroupMaterial::set_default(bool isSkinned) {
 	params.fresnel[0] = 0.025f;
 	params.fresnel[1] = 0.025f;
 	params.fresnel[2] = 0.025f;
@@ -517,12 +517,12 @@ void sGroupMaterial::set_default() {
 	params.nmap1Power = 0.0f;
 
 	twosided = false;
-	vsProg = "model_solid.vs.cso";
+	vsProg = isSkinned ? "model_skin.vs.cso" : "model_solid.vs.cso";
 	psProg = "model.ps.cso";
 }
 
 
-bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, cstr filepath) {
+bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, cstr filepath, bool isSkinnedByDef/* = false*/) {
 	mpMdlData = &mdlData;
 	auto grpNum = mpMdlData->mGrpNum;
 	mpGrpMtl = std::make_unique<sGroupMaterial[]>(grpNum);
@@ -532,7 +532,7 @@ bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, cstr fi
 	
 	if (!deserialize(filepath)) {
 		for (uint32_t i = 0; i < grpNum; ++i) {
-			mpGrpMtl[i].set_default();
+			mpGrpMtl[i].set_default(isSkinnedByDef);
 		}
 		//return true;
 	}

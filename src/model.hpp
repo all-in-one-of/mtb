@@ -59,7 +59,7 @@ struct sGroupMaterial {
 	bool twosided;
 public:
 	void apply(ID3D11DeviceContext* pCtx) const;
-	void set_default();
+	void set_default(bool isSkinned);
 
 	template <class Archive>
 	void serialize(Archive& arc);
@@ -102,7 +102,8 @@ public:
 
 	void apply(ID3D11DeviceContext* pCtx, int grp);
 
-	bool load(ID3D11Device* pDev, cModelData const& mdlData, cstr filepath);
+	bool load(ID3D11Device* pDev, cModelData const& mdlData, 
+		cstr filepath, bool isSkinnedByDef = false);
 	bool save(cstr filepath = nullptr);
 
 	cstr get_grp_name(uint32_t i) const { return mpMdlData->mpGrpNames[i].c_str(); }
