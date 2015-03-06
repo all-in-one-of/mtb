@@ -409,9 +409,9 @@ void do_frame() {
 	cLightMgr::get().update();
 
 	//lightning.disp();
-	sphere.disp();
+	//sphere.disp();
 	//owl.disp();
-	//upuppet.disp();
+	upuppet.disp();
 
 	gnomon.exec();
 	gnomon.disp();
@@ -468,7 +468,7 @@ void loop() {
 
 int main(int argc, char* argv[]) {
 	cSDLInit sdl;
-	auto win = globals.win.ctor_scoped("TestBed", 1200, 900, 0);
+	auto win = globals.win.ctor_scoped("TestBed - SPACE + mouse to control camera", 1200, 900, 0);
 	auto input = globals.input.ctor_scoped();
 	auto gfx = globals.gfx.ctor_scoped(globals.win.get().get_handle());
 	auto ss = globals.shaderStorage.ctor_scoped();
@@ -485,22 +485,12 @@ int main(int argc, char* argv[]) {
 	trackballCam.init(get_camera());
 
 	//lightning.init();
-	sphere.init();
+	//sphere.init();
 	//owl.init();
-	//upuppet.init();
+	upuppet.init();
 
 	auto& l = cConstBufStorage::get().mLightCBuf; 
 	::memset(&l.mData, 0, sizeof(l.mData));
-	
-
-
-
-	//sh.scl(1.2f);
-
-	//pack_sh_param(sh, l.mData.sh);
-
-	//l.update(get_gfx().get_ctx());
-	//l.set_PS(get_gfx().get_ctx()); 
 
 	loop();
 

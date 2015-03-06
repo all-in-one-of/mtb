@@ -1,0 +1,23 @@
+{
+    "value0": {
+        "grp:SideScrollerSkeletalMesh": {
+            "texBaseName": "",
+            "texNmap0Name": "",
+            "texNmap1Name": "",
+            "texMaskName": "",
+            "vsProg": "model_skin.vs.cso",
+            "psProg": "model.ps.cso",
+            "twosided": false,
+            "params": {
+                "fresnel": {
+                    "value0": 0.91300004720687866,
+                    "value1": 0.91300004720687866,
+                    "value2": 0.91300004720687866
+                },
+                "shin": 575.5810546875,
+                "nmap0Power": 1,
+                "nmap1Power": 0
+            }
+        }
+    }
+}
