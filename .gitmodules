@@ -4,3 +4,7 @@
 [submodule "3rd_party/cereal"]
 	path = 3rd_party/cereal
 	url = https://github.com/USCiLab/cereal.git
+[submodule "3rd_party/SDL2"]
+	path = 3rd_party/SDL2
+	url = https://github.com/spurious/SDL-mirror.git
+	branch = release-2.0.3

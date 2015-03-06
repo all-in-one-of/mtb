@@ -98,14 +98,18 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_USE_MATH_DEFINES;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\cereal\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\3rd_party\cereal\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;$(ProjectDir)\3rd_party\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\code\SDL2-2.0.3\VisualC\SDL\x64\Release;D:\code\SDL2-2.0.3\VisualC\SDLmain\x64\Release;$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;D3DCompiler.lib;SDL2.lib;SDL2main.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d11.lib;D3DCompiler.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /d /y "$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget)\assimp-vc100-mt.dll" "$(OutDir)"
+xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Configuration)\SDL2.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -115,21 +119,21 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_USE_MATH_DEFINES;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\cereal\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\3rd_party\cereal\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;$(ProjectDir)\3rd_party\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\code\SDL2-2.0.3\VisualC\SDL\x64\Release;D:\code\SDL2-2.0.3\VisualC\SDLmain\x64\Release;$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;D3DCompiler.lib;SDL2.lib;SDL2main.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d11.lib;D3DCompiler.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
       <Command>
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command> xcopy /d /y "d:\code\SDL2-2.0.3\VisualC\SDL\x64\Release\SDL2.dll" "$(OutDir)"
- xcopy /d /y "$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget)\assimp-vc100-mt.dll" "$(OutDir)"</Command>
+      <Command>xcopy /d /y "$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget)\assimp-vc100-mt.dll" "$(OutDir)"
+xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Configuration)\SDL2.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -142,16 +146,20 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_USE_MATH_DEFINES;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\cereal\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\3rd_party\cereal\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;$(ProjectDir)\3rd_party\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>D:\code\SDL2-2.0.3\VisualC\SDL\x64\Release;D:\code\SDL2-2.0.3\VisualC\SDLmain\x64\Release;$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;D3DCompiler.lib;SDL2.lib;SDL2main.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d11.lib;D3DCompiler.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /d /y "$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget)\assimp-vc100-mt.dll" "$(OutDir)"
+xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Configuration)\SDL2.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -163,16 +171,20 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_USE_MATH_DEFINES;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\code\SDL2-2.0.3\include;$(ProjectDir)\3rd_party\cereal\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\3rd_party\cereal\include;$(ProjectDir)\3rd_party\assimp\include;$(ProjectDir)\3rd_party\DirectXTK\Inc;$(ProjectDir)\3rd_party\imgui\imgui_git;$(ProjectDir)\3rd_party\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>D:\code\SDL2-2.0.3\VisualC\SDL\x64\Release;D:\code\SDL2-2.0.3\VisualC\SDLmain\x64\Release;$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;D3DCompiler.lib;SDL2.lib;SDL2main.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d11.lib;D3DCompiler.lib;assimp-vc100-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /d /y "$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget)\assimp-vc100-mt.dll" "$(OutDir)"
+xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Configuration)\SDL2.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\anim.cpp" />
@@ -299,6 +311,22 @@
     </ProjectReference>
     <ProjectReference Include="3rd_party\imgui\imgui_lib_vs2013.vcxproj">
       <Project>{851be1c7-b9c2-45bc-b172-df7641f05e8a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="3rd_party\SDL2\VisualC\SDLmain\SDLmain_VS2013.vcxproj">
+      <Project>{da956fd3-e142-46f2-9dd5-c78bebb56b7a}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <ProjectReference Include="3rd_party\SDL2\VisualC\SDL\SDL_VS2013.vcxproj">
+      <Project>{81ce8daf-ebb2-4761-8e45-b71abcca8c68}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
