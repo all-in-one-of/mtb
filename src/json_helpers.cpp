@@ -8,6 +8,7 @@ using namespace nJsonHelpers;
 
 bool nJsonHelpers::load_file(cstr filepath, std::function<bool(Value const&)> loader) {
 	auto rw = SDL_RWFromFile(filepath, "rb");
+	if (!rw) { return false; }
 	Sint64 size = SDL_RWsize(rw);
 	if (size <= 0) {
 		SDL_RWclose(rw);

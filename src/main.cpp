@@ -224,20 +224,6 @@ public:
 		return res;
 	}
 };
-class cSphere : public cSolidModel {
-public:
-
-	bool init() {
-		bool res = true;
-		res = res && mMdlData.load("../data/sphere.obj");
-		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, nullptr);
-		res = res && mModel.init(mMdlData, mMtl);
-
-		//mModel.mWmtx = DirectX::XMMatrixScaling(0.3f, 0.3f, 0.3f);
-
-		return res;
-	}
-};
 
 class cSkinnedModel {
 protected:
@@ -324,6 +310,33 @@ public:
 	}
 };
 
+class cJumpingSphere : public cSkinnedAnimatedModel {
+public:
+	bool init() {
+		bool res = true;
+#define OBJPATH "../data/jumping_sphere/"
+
+		res = res && mMdlData.load(OBJPATH "def.geo");
+		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, OBJPATH "def.mtl", true);
+		res = res && mModel.init(mMdlData, mMtl);
+
+		mRigData.load(OBJPATH "def.rig");
+		mRig.init(&mRigData);
+
+		mAnimDataList.load(OBJPATH, "def.alist");
+		mAnimList.init(mAnimDataList, mRigData);
+
+#undef OBJPATH
+
+		auto pRootJnt = mRig.get_joint(0);
+		if (pRootJnt) {
+			pRootJnt->set_parent_mtx(&mModel.mWmtx);
+		}
+
+		return res;
+	}
+};
+
 
 class cUnrealPuppet : public cSkinnedAnimatedModel {
 public:
@@ -368,7 +381,7 @@ public:
 
 cGnomon gnomon;
 cLightning lightning;
-cSphere sphere;
+cJumpingSphere sphere;
 cOwl owl;
 cUnrealPuppet upuppet;
 
@@ -396,9 +409,9 @@ void do_frame() {
 	cLightMgr::get().update();
 
 	//lightning.disp();
-	//sphere.disp();
+	sphere.disp();
 	//owl.disp();
-	upuppet.disp();
+	//upuppet.disp();
 
 	gnomon.exec();
 	gnomon.disp();
@@ -472,9 +485,9 @@ int main(int argc, char* argv[]) {
 	trackballCam.init(get_camera());
 
 	//lightning.init();
-	//sphere.init();
+	sphere.init();
 	//owl.init();
-	upuppet.init();
+	//upuppet.init();
 
 	auto& l = cConstBufStorage::get().mLightCBuf; 
 	::memset(&l.mData, 0, sizeof(l.mData));
