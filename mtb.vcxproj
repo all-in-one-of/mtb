@@ -108,7 +108,8 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /d /y "$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget)\assimp-vc100-mt.dll" "$(OutDir)"
-xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Configuration)\SDL2.dll" "$(OutDir)"</Command>
+xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Configuration)\SDL2.dll" "$(OutDir)"
+xcopy /d /y "$(WindowsSdkDir)\Redist\D3D\$(PlatformTarget)\d3dcompiler_47.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -133,7 +134,8 @@ xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Config
     </CustomBuildStep>
     <PostBuildEvent>
       <Command>xcopy /d /y "$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget)\assimp-vc100-mt.dll" "$(OutDir)"
-xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Configuration)\SDL2.dll" "$(OutDir)"</Command>
+xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Configuration)\SDL2.dll" "$(OutDir)"
+xcopy /d /y "$(WindowsSdkDir)\Redist\D3D\$(PlatformTarget)\d3dcompiler_47.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -158,7 +160,8 @@ xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Config
     </Link>
     <PostBuildEvent>
       <Command>xcopy /d /y "$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget)\assimp-vc100-mt.dll" "$(OutDir)"
-xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Configuration)\SDL2.dll" "$(OutDir)"</Command>
+xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Configuration)\SDL2.dll" "$(OutDir)"
+xcopy /d /y "$(WindowsSdkDir)\Redist\D3D\$(PlatformTarget)\d3dcompiler_47.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -183,7 +186,8 @@ xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Config
     </Link>
     <PostBuildEvent>
       <Command>xcopy /d /y "$(ProjectDir)\3rd_party\assimp\lib\$(PlatformTarget)\assimp-vc100-mt.dll" "$(OutDir)"
-xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Configuration)\SDL2.dll" "$(OutDir)"</Command>
+xcopy /d /y "$(ProjectDir)\3rd_party\SDL2\VisualC\SDL\$(PlatformTarget)\$(Configuration)\SDL2.dll" "$(OutDir)"
+xcopy /d /y "$(WindowsSdkDir)\Redist\D3D\$(PlatformTarget)\d3dcompiler_47.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
